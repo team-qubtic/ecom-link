@@ -1,0 +1,61 @@
+/* Catalogue view: extras on top of the shared page chrome. Class names are
+   camelCase so JSX can access them with dot notation. */
+
+/* Hint block under the catalogue summary: text left, action right. */
+.catalogueHint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  width: 100%;
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.catalogueHint p {
+  flex: 1;
+}
+
+/* Numbered guidance rows for finding the synced CMS collection. */
+.stepsCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-sm);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--inset-highlight), var(--shadow-xs);
+}
+
+.stepRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: 7px var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+
+.stepRow + .stepRow {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.stepRow p {
+  flex: 1;
+  margin: 0;
+}
+
+.stepNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 1px;
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--tint);
+  background: var(--tint-dimmed);
+}

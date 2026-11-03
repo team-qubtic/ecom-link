@@ -1,0 +1,218 @@
+/* AccountPage: profile hero, sign-in card, and plan cards, restyled from
+   the telegram-commerce account skeleton to this plugin's design system.
+   Page-chrome classes come from Dashboard.module.css. */
+
+/* Square back button (mirrors the ConnectionPage back button). */
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-inset);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition:
+    background 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.backButton:hover {
+  background: var(--bg-inset-strong);
+  border-color: var(--border-strong);
+}
+
+/* Hero: centered avatar with plan badge, name, and email line. */
+.heroCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 3px;
+  padding: var(--space-xl) var(--space-lg) var(--space-lg);
+  background:
+    radial-gradient(ellipse 90% 70% at 50% -20%, var(--tint-dimmed) 0%, transparent 65%),
+    var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--inset-highlight), var(--shadow-sm);
+}
+
+.avatarWrap {
+  position: relative;
+  margin-bottom: var(--space-sm);
+}
+
+.avatarCircle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full);
+  color: #ffffff;
+  background: var(--accent-gradient);
+  box-shadow: var(--shadow-btn-primary);
+}
+
+.planBadge {
+  position: absolute;
+  bottom: -2px;
+  right: -6px;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 2px solid var(--bg-card);
+}
+
+.planBadgeFree {
+  color: var(--text-secondary);
+  background: var(--bg-surface-elevated);
+}
+
+.userName {
+  margin: 0;
+  font-size: var(--text-lg);
+  line-height: var(--leading-lg);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.userEmail {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+  color: var(--text-tertiary);
+}
+
+/* Sign-in card. */
+.signinCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--inset-highlight), var(--shadow-xs);
+}
+
+.signinIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  color: var(--tint);
+  background: var(--tint-dimmed);
+}
+
+.signinTitle {
+  margin: 0;
+  font-size: var(--text-md);
+  line-height: var(--leading-md);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.signinHelp {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 15px;
+  color: var(--text-tertiary);
+}
+
+.signinNotice {
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  width: 100%;
+  border-radius: var(--radius-sm);
+  background: var(--info-bg);
+  color: var(--info);
+  font-size: var(--text-xs);
+  line-height: var(--leading-sm);
+}
+
+/* Plan cards: current plan and the Pro teaser side by side. */
+.planGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.planCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--inset-highlight), var(--shadow-xs);
+}
+
+.planCardCurrent {
+  border-color: var(--tint-border);
+  background:
+    linear-gradient(135deg, var(--tint-dimmed) 0%, transparent 60%),
+    var(--bg-card);
+}
+
+.planCardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+}
+
+.planName {
+  font-size: var(--text-md);
+  line-height: var(--leading-md);
+  font-weight: 650;
+  color: var(--text-primary);
+}
+
+.planNamePro {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--warning);
+}
+
+.planFeatures {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  flex: 1;
+}
+
+.planFeature {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: var(--text-xs);
+  line-height: 14px;
+  color: var(--text-secondary);
+}
+
+.planFeature svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--tint);
+}

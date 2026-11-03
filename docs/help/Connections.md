@@ -50,6 +50,12 @@ The companion plugin lets your store accept requests from the plugin while stayi
 
 With two-way sync enabled, the plugin also checks whether your store accepts browser updates. When that check fails, a **Two-Way Sync Blocked** message will appear after saving. Your connection still works for one-way syncing, and installing the companion plugin will open the write path.
 
+## If CMS Editing Is Blocked
+
+The plugin can only write to CMS collections when your Framer account may edit this project. Plugins can do only what the user can, so an account with view-only access cannot save connections or sync products, even with valid store keys.
+
+When that happens, a **CMS Editing Blocked** message appears and the save and connection actions stay disabled. Open the plugin with an account that has edit access to the project, or ask the project owner to grant your account edit permission. The message clears as soon as the permission is granted.
+
 ## Use More Than One Store
 
 You can connect several stores to the same project. Each card on the dashboard is one store, and exactly one is active at a time. Select **Set active** on any card to switch. Syncing and validation always run against the active store.
@@ -72,6 +78,7 @@ Connection details are stored inside this Framer project, in an internal CMS col
 
 ## What To Read Next
 
+- [Sync Inventory Both Ways](./Sync%20Inventory%20Both%20Ways.md) for the write-back flow, change review, and conflicts.
 - [Getting Started](./Getting%20Started.md) for the full first-run walkthrough.
 
 ## Video tutorial

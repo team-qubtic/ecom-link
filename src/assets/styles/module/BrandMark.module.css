@@ -1,0 +1,17 @@
+/* BrandMark: provider tile. Rounded square with a subtle inset highlight so
+   the brand color reads crisp on both themes. */
+
+.tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: 28%;
+  box-shadow: var(--inset-highlight), var(--shadow-xs);
+}
+
+.tileNeutral {
+  background: var(--bg-inset-strong);
+  color: var(--text-secondary);
+  box-shadow: none;
+}

@@ -1,0 +1,113 @@
+/* ===== WriteBackReviewModal - the write-back review and conflict UI (spec 004).
+   Diff rows compare the store value with the Framer value per field.
+   Shared by WriteBackDiff, WriteBackReviewModal, and ConflictResolutionModal.
+   Design tokens only. ===== */
+
+.reviewSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.reviewTitle {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+}
+
+.diffHead {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0 var(--space-xs);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+}
+
+.diffRow {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) minmax(0, 1fr);
+  gap: 2px var(--space-xs);
+  align-items: start;
+  padding: var(--space-xxs) 0;
+}
+
+.diffRowConflict {
+  background: var(--warning-bg);
+  border-left: 2px solid var(--warning);
+  border-radius: var(--radius-xs);
+  padding: var(--space-xs) var(--space-sm);
+}
+
+.diffField {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.diffValueStore {
+  font-size: 12px;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.diffValue {
+  font-size: 12px;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.productGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+  padding: var(--space-xs) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.productGroup:last-child {
+  border-bottom: none;
+}
+
+.productHeading {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.conflictList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.conflictItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.conflictStatus {
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--text-tertiary);
+}
+
+.conflictActions {
+  display: flex;
+  gap: var(--space-xs);
+}

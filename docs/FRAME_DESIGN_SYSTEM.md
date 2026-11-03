@@ -1,5 +1,13 @@
 # Framer Plugin Design System
 
+> **Status note (2026-11):** The palette below is the legacy reference. The
+> shipped design system is "Obsidian Studio", defined entirely by CSS custom
+> properties in `src/assets/styles/variables.css` (indigo-violet accent,
+> near-solid surfaces, hairline borders, glass reserved for chrome). Prefer
+> the tokens in `variables.css` over the hex values in this document. The
+> plugin intentionally does not import `framer.css`; controls are styled by
+> this system alone.
+
 This document defines the design system for the Ecom-Link Framer plugin. All UI components must follow these guidelines.
 
 ## Design Principles

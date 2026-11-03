@@ -20,6 +20,7 @@ import "./woocommerce"
 export type {
   NormalizedProduct,
   NormalizedProductField,
+  NormalizedVariation,
   ProductCategory,
   ProductImage,
   ProductAttribute,
@@ -28,8 +29,10 @@ export type {
   CredentialField,
   Credentials,
   ListProductsQuery,
+  ListVariationsQuery,
   ListProductsResult,
   ProductUpdateFields,
+  ProductBatchUpdate,
   EcommerceProvider,
 } from "./types"
 

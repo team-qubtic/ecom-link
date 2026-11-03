@@ -16,7 +16,7 @@
 import type { framer as FramerHost } from "@framer/plugin"
 
 /** True when the page is embedded in the Framer editor canvas. */
-function runsInsideFramer(): boolean {
+export function runsInsideFramer(): boolean {
   try {
     return typeof window !== "undefined" && window.self !== window.top
   } catch {
@@ -27,7 +27,7 @@ function runsInsideFramer(): boolean {
 }
 
 /** True when the module graph is executing under vitest. */
-function runsUnderVitest(): boolean {
+export function runsUnderVitest(): boolean {
   const env = import.meta.env as ImportMetaEnv & { VITEST?: boolean }
   return Boolean(env && env.VITEST)
 }

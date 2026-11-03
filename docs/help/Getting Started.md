@@ -40,11 +40,12 @@ Your keys will always appear masked, like `ck_••••1234`. That is normal 
 
 ## What Comes Next
 
-Once your store is connected, product syncing is the next step. The import and sync controls are being finished and will appear in the plugin window in an upcoming update, so your connected store is ready for them the moment they arrive.
+Once your store is connected, product syncing is the next step. Selecting **Start sync** on the store card will open the mapping wizard and bring in your catalog. The [Sync Products](./Sync%20Products.md) page walks through the whole flow, including progress, retries, and safety limits.
 
 ## What To Read Next
 
 - [Connections](./Connections.md) for adding, editing, checking, switching, and removing stores.
+- [Sync Products](./Sync%20Products.md) for the first import and every sync after it.
 
 ## Video tutorial
 

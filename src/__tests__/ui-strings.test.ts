@@ -19,7 +19,7 @@ function collectSourceFiles(dir: string): string[] {
     const full = join(dir, entry)
     if (statSync(full).isDirectory()) {
       files.push(...collectSourceFiles(full))
-    } else if (/\.(ts|tsx)$/.test(entry)) {
+    } else if (/\.(ts|tsx|md)$/.test(entry)) {
       files.push(full)
     }
   }

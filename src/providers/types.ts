@@ -124,6 +124,31 @@ export type NormalizedProductField =
   | "attributes"
   | "rating"
   | "ratingCount"
+  | "permalink"
+  | "lastModified"
+  | "variants"
+
+/**
+ * Normalized product variation (one variant of a variable product)
+ */
+export interface NormalizedVariation {
+  /** Platform-specific variation ID */
+  id: string
+  /** Stock keeping unit */
+  sku: string
+  /** Current price (after discounts) */
+  price: number
+  /** Regular price (before discounts) */
+  regularPrice: number
+  /** Sale price (if on sale) */
+  salePrice: number | null
+  /** Stock status */
+  stockStatus: "instock" | "outofstock" | "onbackorder"
+  /** Current stock quantity (if managed) */
+  stockQuantity: number | null
+  /** Attribute selections that define this variant */
+  attributes: ProductAttribute[]
+}
 
 /**
  * Field mapping configuration
@@ -212,10 +237,22 @@ export interface ListProductsQuery {
   status?: string
   /** Filter by category */
   category?: string
+  /** Only products modified after this ISO 8601 timestamp (incremental sync) */
+  modifiedAfter?: string
   /** Sort field */
   sortBy?: string
   /** Sort order */
   sortOrder?: "asc" | "desc"
+}
+
+/**
+ * Query parameters for listing variations of one product
+ */
+export interface ListVariationsQuery {
+  /** Page number (1-indexed) */
+  page?: number
+  /** Items per page */
+  perPage?: number
 }
 
 /**
@@ -253,6 +290,16 @@ export type ProductUpdateFields = Partial<
     | "stockQuantity"
   >
 >
+
+/**
+ * One product update inside a batch write request
+ */
+export interface ProductBatchUpdate {
+  /** Platform product ID to update */
+  id: string
+  /** Fields to update on this product */
+  fields: ProductUpdateFields
+}
 
 /**
  * eCommerce provider interface
@@ -308,6 +355,23 @@ export interface EcommerceProvider<TSupportsTwoWay extends boolean = boolean> {
   ): Promise<NormalizedProduct>
 
   /**
+   * List variations of a variable product, page by page. Optional because
+   * platforms without variants (or adapters that have not implemented it
+   * yet) simply omit it; the sync engine only calls it when the merchant
+   * maps the variants field.
+   *
+   * @param credentials - Platform-specific credentials
+   * @param productId - Platform product ID of the variable product
+   * @param query - Pagination options (page and perPage)
+   * @returns Variations on the requested page
+   */
+  listVariations?(
+    credentials: Credentials,
+    productId: string,
+    query?: ListVariationsQuery
+  ): Promise<NormalizedVariation[]>
+
+  /**
    * Update specific fields on a product
    * Only available if TSupportsTwoWay is true
    * Only updates fields that are supported by the provider's capabilities
@@ -324,6 +388,20 @@ export interface EcommerceProvider<TSupportsTwoWay extends boolean = boolean> {
         fields: ProductUpdateFields
       ) => Promise<NormalizedProduct>
     : never
+
+  /**
+   * Update several products in one request. Optional so providers can add
+   * it later; the sync engine uses it when many products change at once and
+   * falls back to single updates otherwise.
+   *
+   * @param credentials - Platform-specific credentials
+   * @param updates - Products and fields to update
+   * @returns Updated products in request order
+   */
+  updateProductsBatch?(
+    credentials: Credentials,
+    updates: ProductBatchUpdate[]
+  ): Promise<NormalizedProduct[]>
 
   /**
    * Optional: check whether the platform allows browser write access for

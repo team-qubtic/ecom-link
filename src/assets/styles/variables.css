@@ -1,156 +1,230 @@
 /* ============================================================================
-   Design Tokens - Liquid Glassmorphism
+   Ecom-Link Design Tokens — "Obsidian Studio"
+
+   Discipline rules that keep the UI modern instead of murky:
+   1. Glass (translucency + blur) is reserved for chrome: page header, bottom
+      nav, and modals. Content cards are near-solid with hairline borders.
+   2. One accent (indigo → violet) carries brand moments and primary actions.
+      Status colors only appear on status chips and notices, never decoratively.
+   3. Legacy token names (--bg-card, --tint-glow, …) are kept as aliases so
+      every CSS module keeps working; they map onto the new surface model.
    ============================================================================ */
 
 :root,
 [data-theme="dark"],
 [data-framer-theme="dark"] {
-  /* Accent & Brand Palette */
-  --tint: #0099ff;
-  --tint-hover: #0088ee;
-  --tint-active: #0077dd;
-  --tint-dimmed: rgba(0, 153, 255, 0.14);
-  --tint-border: rgba(0, 153, 255, 0.38);
-  --tint-glow: 0 0 20px -3px rgba(0, 153, 255, 0.38);
+  /* Accent & Brand: indigo core, violet gradient endpoint. */
+  --tint: #6366f1;
+  --tint-hover: #7a7ef6;
+  --tint-active: #5558e8;
+  --tint-2: #8b5cf6;
+  --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --tint-dimmed: rgba(99, 102, 241, 0.14);
+  --tint-border: rgba(129, 140, 248, 0.42);
+  --tint-glow: 0 1px 2px rgba(79, 70, 229, 0.4), 0 4px 14px -4px rgba(99, 102, 241, 0.55);
+  --ring: 0 0 0 3px rgba(99, 102, 241, 0.22);
 
-  /* Semantic Status Palette */
-  --success: #10b981;
-  --success-bg: rgba(16, 185, 129, 0.12);
-  --warning: #f59e0b;
-  --warning-bg: rgba(245, 158, 11, 0.12);
-  --danger: #f43f5e;
-  --danger-bg: rgba(244, 63, 94, 0.12);
+  /* Semantic Status (bright steps read well on near-black). */
+  --success: #34d399;
+  --success-bg: rgba(52, 211, 153, 0.12);
+  --warning: #fbbf24;
+  --warning-bg: rgba(251, 191, 36, 0.12);
+  --danger: #f87171;
+  --danger-bg: rgba(248, 113, 113, 0.12);
+  --info: #67b6f3;
+  --info-bg: rgba(103, 182, 243, 0.12);
 
-  /* Surface & Glassmorphism Tokens */
-  --bg-app: #08090d;
-  --bg-surface: rgba(18, 22, 34, 0.68);
-  --bg-surface-elevated: rgba(26, 32, 48, 0.86);
-  --bg-card: rgba(20, 26, 40, 0.65);
-  --bg-card-hover: rgba(28, 36, 56, 0.78);
-  --bg-glass-base: rgba(14, 18, 28, 0.72);
-  --bg-glass-nav: rgba(12, 16, 26, 0.85);
+  /* Surfaces: near-solid cards; glass only for chrome. */
+  --bg-app: #0a0b10;
+  --bg-card: #14161d;
+  --bg-card-hover: #1a1d26;
+  --bg-surface: #101218;
+  --bg-surface-elevated: #20242f;
+  --bg-inset: rgba(255, 255, 255, 0.045);
+  --bg-inset-strong: rgba(255, 255, 255, 0.08);
+  --bg-glass: rgba(17, 19, 27, 0.72);
+  --bg-glass-strong: rgba(19, 21, 30, 0.9);
+  /* Legacy aliases: modules written against the old names keep working. */
+  --bg-glass-base: var(--bg-glass);
+  --bg-glass-nav: var(--bg-glass);
 
-  /* Border Tokens */
-  --border-default: rgba(255, 255, 255, 0.12);
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-strong: rgba(255, 255, 255, 0.28);
+  /* Borders: hairline whites. */
+  --border-default: rgba(255, 255, 255, 0.09);
+  --border-subtle: rgba(255, 255, 255, 0.055);
+  --border-strong: rgba(255, 255, 255, 0.17);
 
-  /* Text Colors */
-  --text-primary: #ffffff;
-  --text-secondary: #9aa2b1;
-  --text-tertiary: #717b91;
-  --text-muted: #646c7c;
+  /* Text ramp. */
+  --text-primary: #f3f5f9;
+  --text-secondary: #a2aabd;
+  --text-tertiary: #7b849a;
+  --text-muted: #626b81;
 
-  /* Fluid Ambient Mesh Background */
+  /* Ambient background: one aurora, top-anchored, barely there. */
   --bg-mesh:
-    radial-gradient(ellipse 80% 50% at 20% -20%, rgba(0, 153, 255, 0.14) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 90% 10%, rgba(139, 92, 246, 0.11) 0%, transparent 55%),
-    radial-gradient(ellipse 70% 60% at 50% 110%, rgba(0, 212, 255, 0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 50% at 90% 90%, rgba(16, 185, 129, 0.06) 0%, transparent 55%);
+    radial-gradient(ellipse 120% 55% at 50% -12%, rgba(99, 102, 241, 0.14) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 45% at 100% -5%, rgba(139, 92, 246, 0.09) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 40% at 0% -5%, rgba(56, 189, 248, 0.05) 0%, transparent 50%);
 
-  /* Liquid Glass Effects */
-  --liquid-glass-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.02) 60%, rgba(0, 153, 255, 0.04) 100%);
+  /* Glass chrome treatment. */
+  --liquid-glass-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.015) 100%);
   --shadow-liquid-glass:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
-    inset 0 0 16px 0 rgba(255, 255, 255, 0.015),
-    0 8px 24px -4px rgba(0, 0, 0, 0.45);
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.07),
+    0 8px 24px -12px rgba(0, 0, 0, 0.5);
 
-  /* Elevation Shadows */
-  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 16px 40px -8px rgba(0, 0, 0, 0.6);
+  /* Elevation. */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.28), 0 4px 14px -8px rgba(0, 0, 0, 0.55);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.28), 0 8px 24px -8px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.3), 0 16px 40px -12px rgba(0, 0, 0, 0.6);
   --shadow-glass:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.14),
-    0 8px 24px -4px rgba(0, 0, 0, 0.4);
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
+    0 8px 24px -8px rgba(0, 0, 0, 0.5);
   --shadow-btn-primary:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.35),
-    var(--tint-glow),
-    0 3px 10px rgba(0, 153, 255, 0.4);
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.24),
+    var(--tint-glow);
+  --inset-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.055);
 
-  /* Typography */
+  /* Typography. */
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* Radii Scale */
-  --radius-xs: 4px;
+  /* Type scale. */
+  --text-xs: 10px;
+  --leading-xs: 12px;
+  --text-sm: 11px;
+  --leading-sm: 14px;
+  --text-base: 12px;
+  --leading-base: 16px;
+  --text-md: 13px;
+  --leading-md: 18px;
+  --text-lg: 15px;
+  --leading-lg: 20px;
+  --text-xl: 17px;
+  --leading-xl: 22px;
+
+  /* Radii Scale. */
+  --radius-xs: 6px;
   --radius-sm: 8px;
-  --radius-md: 12px;
+  --radius-md: 10px;
   --radius-lg: 14px;
-  --radius-xl: 16px;
+  --radius-xl: 18px;
   --radius-full: 9999px;
 
-  	/* Spacing */
-	--space-xxs: 2px;
-  	--space-xs: 4px;
-  	--space-sm: 8px;
-  	--space-md: 12px;
-  	--space-lg: 16px;
-  	--space-xl: 24px;
- 	--space-xxl: 32px;
+  /* Spacing (4px grid). */
+  --space-xxs: 2px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-xxl: 32px;
 }
 
 [data-theme="light"],
 [data-framer-theme="light"] {
-  /* Accent & Brand Palette */
-  --tint: #0099ff;
-  --tint-hover: #0088ee;
-  --tint-active: #0077dd;
-  --tint-dimmed: rgba(0, 153, 255, 0.10);
-  --tint-border: rgba(0, 153, 255, 0.30);
-  --tint-glow: 0 0 20px -3px rgba(0, 153, 255, 0.25);
+  /* Accent & Brand: deeper indigo for contrast on white. */
+  --tint: #4f46e5;
+  --tint-hover: #6366f1;
+  --tint-active: #4438c9;
+  --tint-2: #7c3aed;
+  --accent-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  --tint-dimmed: rgba(79, 70, 229, 0.09);
+  --tint-border: rgba(79, 70, 229, 0.32);
+  --tint-glow: 0 1px 2px rgba(67, 56, 202, 0.25), 0 3px 10px -3px rgba(79, 70, 229, 0.4);
+  --ring: 0 0 0 3px rgba(79, 70, 229, 0.16);
 
-  /* Semantic Status Palette */
+  /* Semantic Status. */
   --success: #059669;
-  --success-bg: rgba(16, 185, 129, 0.10);
-  --warning: #d97706;
-  --warning-bg: rgba(245, 158, 11, 0.10);
-  --danger: #e11d48;
-  --danger-bg: rgba(244, 63, 94, 0.08);
+  --success-bg: rgba(5, 150, 105, 0.09);
+  --warning: #b45309;
+  --warning-bg: rgba(217, 119, 6, 0.1);
+  --danger: #dc2626;
+  --danger-bg: rgba(220, 38, 38, 0.08);
+  --info: #0369a1;
+  --info-bg: rgba(3, 105, 161, 0.08);
 
-  /* Surface & Glassmorphism Tokens */
-  --bg-app: #f2f5fa;
-  --bg-surface: rgba(255, 255, 255, 0.82);
-  --bg-surface-elevated: rgba(255, 255, 255, 0.96);
-  --bg-card: rgba(255, 255, 255, 0.78);
-  --bg-card-hover: rgba(255, 255, 255, 0.95);
-  --bg-glass-base: rgba(255, 255, 255, 0.82);
-  --bg-glass-nav: rgba(255, 255, 255, 0.88);
+  /* Surfaces. */
+  --bg-app: #f3f4f8;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8f9fd;
+  --bg-surface: #eef0f6;
+  --bg-surface-elevated: #ffffff;
+  --bg-inset: rgba(15, 20, 40, 0.045);
+  --bg-inset-strong: rgba(15, 20, 40, 0.08);
+  --bg-glass: rgba(255, 255, 255, 0.62);
+  --bg-glass-strong: rgba(255, 255, 255, 0.85);
+  /* Legacy aliases: modules written against the old names keep working. */
+  --bg-glass-base: var(--bg-glass);
+  --bg-glass-nav: var(--bg-glass);
 
-  /* Border Tokens */
-  --border-default: rgba(0, 0, 0, 0.09);
-  --border-subtle: rgba(0, 0, 0, 0.04);
-  --border-strong: rgba(0, 0, 0, 0.18);
+  /* Borders. */
+  --border-default: rgba(16, 20, 35, 0.1);
+  --border-subtle: rgba(16, 20, 35, 0.05);
+  --border-strong: rgba(16, 20, 35, 0.2);
 
-  /* Text Colors */
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-tertiary: #64748b;
-  --text-muted: #94a3b8;
+  /* Text ramp. */
+  --text-primary: #161922;
+  --text-secondary: #4d5468;
+  --text-tertiary: #6d7488;
+  --text-muted: #9aa1b4;
 
-  /* Liquid Glass Effects */
-  --liquid-glass-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.80) 100%);
+  /* Ambient background: soft indigo aurora at the top, mirroring dark. */
+  --bg-mesh:
+    radial-gradient(ellipse 120% 55% at 50% -12%, rgba(79, 70, 229, 0.11) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 45% at 100% -5%, rgba(124, 58, 237, 0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 40% at 0% -5%, rgba(56, 189, 248, 0.05) 0%, transparent 50%);
+
+  /* Glass chrome treatment. */
+  --liquid-glass-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.82) 100%);
   --shadow-liquid-glass:
     inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
-    0 4px 16px rgba(0, 0, 0, 0.06);
+    0 4px 16px -6px rgba(16, 20, 35, 0.1);
 
-  /* Elevation Shadows */
-  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.12);
-  --shadow-lg: 0 16px 40px -8px rgba(0, 0, 0, 0.15);
+  /* Elevation. */
+  --shadow-xs: 0 1px 2px rgba(16, 20, 35, 0.06);
+  --shadow-sm: 0 1px 2px rgba(16, 20, 35, 0.05), 0 3px 10px -4px rgba(16, 20, 35, 0.1);
+  --shadow-md: 0 2px 4px rgba(16, 20, 35, 0.05), 0 6px 18px -6px rgba(16, 20, 35, 0.14);
+  --shadow-lg: 0 4px 8px rgba(16, 20, 35, 0.05), 0 16px 40px -12px rgba(16, 20, 35, 0.22);
   --shadow-glass:
     inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
-    0 4px 16px rgba(0, 0, 0, 0.06);
+    0 4px 16px -6px rgba(16, 20, 35, 0.1);
   --shadow-btn-primary:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.35),
-    var(--tint-glow),
-    0 3px 10px rgba(0, 153, 255, 0.3);
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.28),
+    var(--tint-glow);
+  --inset-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.85);
 
-	/* Spacing */
-	--space-xxs: 2px;
-  	--space-xs: 4px;
-  	--space-sm: 8px;
-  	--space-md: 12px;
-  	--space-lg: 16px;
-  	--space-xl: 24px;
- 	--space-xxl: 32px;
+  /* Typography. */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Type scale. */
+  --text-xs: 10px;
+  --leading-xs: 12px;
+  --text-sm: 11px;
+  --leading-sm: 14px;
+  --text-base: 12px;
+  --leading-base: 16px;
+  --text-md: 13px;
+  --leading-md: 18px;
+  --text-lg: 15px;
+  --leading-lg: 20px;
+  --text-xl: 17px;
+  --leading-xl: 22px;
+
+  /* Radii Scale. */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-full: 9999px;
+
+  /* Spacing (4px grid). */
+  --space-xxs: 2px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-xxl: 32px;
 }

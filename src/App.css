@@ -1,7 +1,6 @@
-/* Ecom-Link plugin styles - Liquid Glassmorphism Design System */
-/* Based on Frame Drop / Framekit Pro style guide */
+/* Ecom-Link plugin styles - Obsidian Studio design system */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;450;500;550;600;650;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 /* Design tokens: theme-aware CSS custom properties. */
 @import "./assets/styles/variables.css";

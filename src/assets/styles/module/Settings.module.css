@@ -1,0 +1,112 @@
+/* Settings view: extras on top of the shared page chrome. Class names are
+   camelCase so JSX can access them with dot notation. */
+
+/* Access card: permission row plus a footnote line under a hairline. */
+.accessCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--inset-highlight), var(--shadow-xs);
+}
+
+.accessRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.accessIconOk {
+  color: var(--success);
+  background: var(--success-bg);
+}
+
+.accessIconBlocked {
+  color: var(--danger);
+  background: var(--danger-bg);
+}
+
+.accessFootnote {
+  margin: 0;
+  padding: var(--space-sm) var(--space-sm) var(--space-xxs);
+  border-top: 1px solid var(--border-subtle);
+  font-size: var(--text-xs);
+  line-height: var(--leading-sm);
+  color: var(--text-tertiary);
+}
+
+/* About card: simple label and value rows. */
+.aboutCard {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-xs) var(--space-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--inset-highlight), var(--shadow-xs);
+}
+
+.aboutRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: 9px 0;
+}
+
+.aboutRow + .aboutRow {
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Account entry row linking to the account page. */
+.accountRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  width: 100%;
+  padding: var(--space-md);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  text-align: left;
+  box-shadow: var(--inset-highlight), var(--shadow-xs);
+  transition:
+    background 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.accountRow:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-strong);
+}
+
+.accountRow svg:last-child {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.accountRowText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.accountRowIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: var(--radius-full);
+  color: var(--tint);
+  background: var(--tint-dimmed);
+}

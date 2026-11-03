@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
- * ConnectionPage Card integration: the Store Details section must render
- * inside the Polaris-style Card shell, keeping the labeled input accessible.
+ * ConnectionPage form integration: the Store section heading renders above
+ * its fields, keeping the labeled store URL input accessible on the page.
  */
 
 import { afterEach, describe, expect, it, vi } from "vitest"
@@ -9,17 +9,23 @@ import { cleanup, render, screen } from "@testing-library/react"
 
 // The real @framer/plugin module never resolves outside the Framer host,
 // so render tests must mock it before importing views that reach storage.
-vi.mock("@framer/plugin", () => ({ framer: {} }))
+// The permission hook must exist and allow editing so the form renders.
+vi.mock("@framer/plugin", () => ({
+  framer: {},
+  useIsAllowedTo: vi.fn(function useIsAllowedTo() {
+    return true
+  }),
+}))
 
 import { ConnectionPage } from "../ConnectionPage"
-import cardStyles from "../../assets/styles/module/Card.module.css"
+import connectionPageStyles from "../../assets/styles/module/ConnectionPage.module.css"
 
 afterEach(function cleanupDom() {
   cleanup()
 })
 
-describe("ConnectionPage Card", () => {
-  it("renders Store Details inside the Card shell", () => {
+describe("ConnectionPage Form", () => {
+  it("renders the Store section with its labeled input", () => {
     const { container } = render(
       <ConnectionPage
         connection={null}
@@ -27,11 +33,13 @@ describe("ConnectionPage Card", () => {
         onSaved={function noop() {}}
       />
     )
-    const card = container.querySelector(`section.${cardStyles.uiCard}`)
-    expect(card).not.toBeNull()
-    const heading = screen.getByText("Store Details")
-    expect(card?.contains(heading)).toBe(true)
-    const input = card?.querySelector("input#storeUrl")
+    const section = container.querySelector(
+      `section.${connectionPageStyles.formSection}`
+    )
+    expect(section).not.toBeNull()
+    const heading = screen.getByText("Store")
+    expect(heading).not.toBeNull()
+    const input = section?.querySelector("input#storeUrl")
     expect(input).not.toBeNull()
   })
 })

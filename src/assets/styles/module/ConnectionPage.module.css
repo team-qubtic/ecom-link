@@ -1,18 +1,20 @@
-/* ConnectionPage: full-height page shell for adding or editing a
-   connection. .btn is a shared global class, so it needs :global() to be
-   referenced from inside a module. */
+/* ConnectionPage: full-height form page for adding or editing a
+   connection. Column layout: glass header, scrollable form, sticky glass
+   action footer. Page-chrome classes (pageHeader, pageTitle) come from
+   Dashboard.module.css; .btn is a shared global class. */
 
 .connectionPage {
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: hidden;
   animation: slide-in 250ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes slide-in {
   from {
     opacity: 0;
-    transform: translateX(20px);
+    transform: translateX(16px);
   }
   to {
     opacity: 1;
@@ -20,78 +22,188 @@
   }
 }
 
-.pageHeader {
-  display: flex;
+/* Square back button in the header. */
+.backButton {
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px 20px;
-  /* background: var(--bg-glass-nav);` */
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border-default);
-  flex-shrink: 0;
-  box-shadow: var(--shadow-liquid-glass);
-}
-
-.pageHeader button {
-	background-color: var(--bg-card);
-}
-
-.pageTitle {
-  font-size: 1rem;
-  line-height: 20px;
-  font-weight: 650;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-inset);
   color: var(--text-primary);
-  margin: 0;
+  cursor: pointer;
+  transition:
+    background 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.backButton:not(:disabled):hover {
+  background: var(--bg-inset-strong);
+  border-color: var(--border-strong);
+}
+
+.backButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .connectionPageForm {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding: var(--space-md);
+  padding: var(--space-lg) var(--space-md);
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
 }
 
+/* Platform identity row at the top of the form. */
+.platformRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--inset-highlight), var(--shadow-xs);
+}
+
+.platformInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.platformName {
+  font-size: var(--text-base);
+  line-height: var(--leading-base);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.platformHint {
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  color: var(--text-tertiary);
+}
+
+/* Form sections: header row + fields directly on the page (no nested
+   cards; the page itself is the canvas). */
 .formSection {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: var(--space-md);
 }
 
-.formSection input {
-	width: calc(100%);
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 0 var(--space-xxs);
+}
+
+.sectionIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: var(--radius-xs);
+  color: var(--text-secondary);
+  background: var(--bg-inset);
+}
+
+/* Accent tile for interactive settings (two-way sync). */
+.sectionIconAccent {
+  color: var(--tint);
+  background: var(--tint-dimmed);
 }
 
 .sectionTitle {
-  font-size: 14px;
-  line-height: 1;
-  /* font-weight: 600; */
+  font-size: var(--text-base);
+  line-height: var(--leading-base);
+  font-weight: 600;
   color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 8px;
   margin: 0;
 }
 
-.formActions {
+/* Setting card: icon + title + description on the left, switch on the
+   right; conditional fields expand below a hairline divider. */
+.settingCard {
   display: flex;
-  gap: 12px;
-  padding-top: 8px;
-  border-top: 1px solid var(--border-default);
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--inset-highlight), var(--shadow-xs);
+  overflow: hidden;
+}
+
+.settingHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+}
+
+.settingText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.settingDescription {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: var(--leading-sm);
+  color: var(--text-tertiary);
+}
+
+.settingBody {
+  padding: var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-inset);
+  animation: reveal 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Sticky action footer: glass bar pinned above the bottom nav. */
+.formActions {
+  flex: none;
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  padding-bottom: max(var(--space-md), env(safe-area-inset-bottom));
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .formActions :global(.btn) {
   flex: 1;
 }
 
-.toggleLabel {
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 500;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 8px;
+/* Notices scroll with the form (they are children of it). */
+.connectionPageForm :global(.notice) {
+  flex: none;
 }

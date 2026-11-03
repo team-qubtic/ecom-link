@@ -6,22 +6,31 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-// The Framer CMS API is faked in memory so storage tests run anywhere.
+// The Framer CMS API is faked in memory so storage tests run anywhere. The
+// fake mirrors the class-shaped SDK surface: collections carry getFields,
+// addFields, getItems, addItems, and removeItems, createCollection takes the
+// name as a plain string, and item fieldData is keyed by field ID.
 const { fakeCms, resetFakeCms } = vi.hoisted(() => {
-  interface FakeCollection {
+  interface FakeField {
     id: string
     name: string
+    type: string
   }
   interface FakeItem {
     id: string
+    slug: string
     fieldData: Record<string, { type: string; value: unknown }>
+  }
+  interface FakeCollectionState {
+    id: string
+    name: string
+    fields: FakeField[]
+    items: FakeItem[]
   }
 
   function createState() {
     return {
-      collections: [] as FakeCollection[],
-      fields: new Map<string, Array<{ id: string; name: string; type: string }>>(),
-      items: new Map<string, FakeItem[]>(),
+      collections: [] as FakeCollectionState[],
       nextCollectionId: 1,
       nextFieldId: 1,
       nextItemId: 1,
@@ -29,89 +38,119 @@ const { fakeCms, resetFakeCms } = vi.hoisted(() => {
   }
 
   let state = createState()
+  // Methods whose permission was checked, mirroring the SDK contract.
+  const checkedMethods = new Set<string>()
 
   function reset() {
     state = createState()
+    checkedMethods.clear()
   }
 
   function clone<T>(value: T): T {
     return JSON.parse(JSON.stringify(value)) as T
   }
 
+  // The SDK rejects protected calls that were not permission-checked first.
+  function assertChecked(method: string) {
+    if (!checkedMethods.has(method)) {
+      throw new Error(
+        `Invoking protected method "${method}" without checking permission first.`
+      )
+    }
+  }
+
+  /** Expose one collection through the same class-shaped API as the SDK. */
+  function toCollectionApi(entry: FakeCollectionState) {
+    return {
+      id: entry.id,
+      name: entry.name,
+      async getFields() {
+        return clone(entry.fields)
+      },
+      async addFields(fields: Array<{ name: string; type: string }>) {
+        assertChecked("Collection.addFields")
+        const created = fields.map(function createField(field) {
+          const full = {
+            id: `field-${state.nextFieldId}`,
+            name: field.name,
+            type: field.type,
+          }
+          state.nextFieldId += 1
+          return full
+        })
+        entry.fields.push(...clone(created))
+        return clone(created)
+      },
+      async getItems() {
+        return clone(entry.items)
+      },
+      async addItems(
+        items: Array<{
+          id?: string
+          slug?: string
+          fieldData?: FakeItem["fieldData"]
+        }>
+      ) {
+        assertChecked("Collection.addItems")
+        for (const input of items) {
+          if (input.id) {
+            const item = entry.items.find(function hasId(candidate) {
+              return candidate.id === input.id
+            })
+            if (!item) {
+              throw new Error(`Item ${input.id} not found`)
+            }
+            if (input.slug) {
+              item.slug = input.slug
+            }
+            // Mirror the strictest SDK reading: updates replace fieldData.
+            item.fieldData = clone(input.fieldData ?? item.fieldData)
+          } else {
+            if (!input.slug) {
+              throw new Error("Slug is required when adding an item.")
+            }
+            entry.items.push({
+              id: `item-${state.nextItemId}`,
+              slug: input.slug,
+              fieldData: clone(input.fieldData ?? {}),
+            })
+            state.nextItemId += 1
+          }
+        }
+      },
+      async removeItems(itemIds: string[]) {
+        assertChecked("Collection.removeItems")
+        entry.items = entry.items.filter(function kept(item) {
+          return !itemIds.includes(item.id)
+        })
+      },
+    }
+  }
+
   const fakeCms = {
-    async getCollections() {
-      return clone(state.collections)
+    isAllowedTo(...methods: string[]) {
+      for (const method of methods) {
+        checkedMethods.add(method)
+      }
+      return true
     },
-    async createCollection(data: { name: string }) {
-      const collection = {
+    async getCollections() {
+      return state.collections.map(toCollectionApi)
+    },
+    async createCollection(name: string) {
+      assertChecked("createCollection")
+      if (typeof name !== "string") {
+        throw new Error("createCollection expects the collection name string.")
+      }
+      const entry: FakeCollectionState = {
         id: `col-${state.nextCollectionId}`,
-        name: data.name,
+        name,
+        fields: [],
+        items: [],
       }
       state.nextCollectionId += 1
-      state.collections.push(collection)
-      state.fields.set(collection.id, [])
-      state.items.set(collection.id, [])
-      return clone(collection)
-    },
-    async getFields(collectionId: string) {
-      return clone(state.fields.get(collectionId) ?? [])
-    },
-    async createField(
-      collectionId: string,
-      data: { name: string; type: string }
-    ) {
-      const field = {
-        id: `field-${state.nextFieldId}`,
-        name: data.name,
-        type: data.type,
-      }
-      state.nextFieldId += 1
-      state.fields.get(collectionId)?.push(field)
-      return clone(field)
-    },
-    async getItems(collectionId: string) {
-      return clone(state.items.get(collectionId) ?? [])
-    },
-    async createItem(
-      collectionId: string,
-      data: { fieldData: FakeItem["fieldData"] }
-    ) {
-      const item = {
-        id: `item-${state.nextItemId}`,
-        fieldData: clone(data.fieldData),
-      }
-      state.nextItemId += 1
-      state.items.get(collectionId)?.push(item)
-      return clone(item)
-    },
-    async updateItem(
-      collectionId: string,
-      itemId: string,
-      data: { fieldData: FakeItem["fieldData"] }
-    ) {
-      const list = state.items.get(collectionId) ?? []
-      const item = list.find(function hasId(entry) {
-        return entry.id === itemId
-      })
-      if (!item) {
-        throw new Error(`Item ${itemId} not found`)
-      }
-      for (const [name, entry] of Object.entries(data.fieldData)) {
-        item.fieldData[name] = clone(entry)
-      }
-      return clone(item)
-    },
-    async deleteItem(collectionId: string, itemId: string) {
-      const list = state.items.get(collectionId)
-      if (!list) {
-        return
-      }
-      const index = list.findIndex(function hasId(entry) {
-        return entry.id === itemId
-      })
-      if (index >= 0) {
-        list.splice(index, 1)
-      }
+      state.collections.push(entry)
+      return toCollectionApi(entry)
     },
   }
 
@@ -197,6 +236,33 @@ function validInput(): SaveConnectionInput {
     consumerSecret: "cs_abcdef12345678",
     keyScope: "read",
   }
+}
+
+/** Read the raw stored items with fieldData keyed by field name. */
+async function storedItems(): Promise<
+  Array<{ id: string; fieldData: Record<string, unknown> }>
+> {
+  const collections = await fakeCms.getCollections()
+  const internal = collections.find(function hasName(collection) {
+    return collection.name === "Ecom-Link Internal"
+  })
+  if (!internal) {
+    return []
+  }
+  const fields = await internal.getFields()
+  const nameById = new Map(
+    fields.map(function toPair(field) {
+      return [field.id, field.name] as const
+    })
+  )
+  const items = await internal.getItems()
+  return items.map(function toNameKeyed(item) {
+    const fieldData: Record<string, unknown> = {}
+    for (const [fieldId, entry] of Object.entries(item.fieldData ?? {})) {
+      fieldData[nameById.get(fieldId) ?? fieldId] = entry.value
+    }
+    return { id: item.id, fieldData }
+  })
 }
 
 describe("normalizeStoreUrl", () => {
@@ -289,7 +355,7 @@ describe("saveConnection", () => {
       }
     )
     expect(internal).toBeDefined()
-    const fields = await fakeCms.getFields(internal!.id)
+    const fields = await internal!.getFields()
     const names = fields.map(function nameOf(field) {
       return field.name
     })
@@ -345,9 +411,8 @@ describe("saveConnection", () => {
     expect(edited.storeUrl).toBe("https://renamed.example.com")
     // The validation call reused the stored secrets, not blanks.
     expect(lastCredentials?.consumerKey).toBe("ck_abcdef12345678")
-    const collections = await fakeCms.getCollections()
-    const items = await fakeCms.getItems(collections[0].id)
-    expect(items[0].fieldData.consumer_key.value).toBe("ck_abcdef12345678")
+    const items = await storedItems()
+    expect(items[0]?.fieldData.consumer_key).toBe("ck_abcdef12345678")
   })
 })
 
@@ -375,6 +440,8 @@ describe("multiple connections", () => {
     const second = await saveConnection({
       ...validInput(),
       storeUrl: "https://second.example.com",
+      consumerKey: "ck_second98765432",
+      consumerSecret: "cs_second98765432",
       companionPluginUrl: "https://bridge.example.com",
     })
     await setActiveConnection(second.id)
@@ -383,11 +450,10 @@ describe("multiple connections", () => {
     expect(remaining).toHaveLength(1)
     expect(remaining[0].isActive).toBe(true)
     expect(remaining[0].storeHost).toBe("store.example.com")
-    const collections = await fakeCms.getCollections()
-    const items = await fakeCms.getItems(collections[0].id)
+    const items = await storedItems()
     const serialized = JSON.stringify(items)
     expect(serialized).not.toContain("bridge.example.com")
-    expect(serialized).not.toContain("cs_abcdef12345678")
+    expect(serialized).not.toContain("cs_second98765432")
   })
 })
 

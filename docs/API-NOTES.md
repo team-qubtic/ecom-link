@@ -1,31 +1,34 @@
 # Framer Plugin API v4.1.0 - Key Findings
 
-> Verified: 2026-10-03
+> Verified: 2026-10-03. Re-verified 2026-10-19 against `node_modules/@framer/plugin/dist/index.d.ts` after a typia assertion crash traced the CMS notes to an imagined API surface.
 
 ## CMS API (Collections)
 
-**Available**: Full CMS CRUD operations
+**Available**: Full CMS CRUD operations through a **class-shaped** API. Collections and items are class instances with methods; there are no free functions like `framer.createItem` or `framer.getItems(collectionId)`. All SDK inputs are runtime-asserted with typia, so passing a wrong shape throws `Error on typia.createAssert(): invalid type on $input[0], expect to be string` instead of a helpful message.
 
 ### Collections
-- `framer.getCollections()` - list all collections
-- `framer.getCollection(id)` - get single collection
-- `framer.createCollection(data)` - create collection
-- `framer.updateCollection(id, data)` - update collection metadata
-
-### Collection Items
-- `framer.getItems(collectionId, options?)` - list items (paginated)
-- `framer.getItem(collectionId, itemId)` - get single item
-- `framer.createItem(collectionId, itemData)` - create item
-- `framer.updateItem(collectionId, itemId, itemData)` - update item
-- `framer.deleteItem(collectionId, itemId)` - delete item
-- `framer.batchUpdateItems(collectionId, items)` - batch update
+- `framer.getCollections()` - list all collections as `Collection[]`
+- `framer.createCollection(name: string)` - create collection. The name is a plain string, not an object
+- `collection.setAsActive()` - select this collection in the Framer UI
+- `collection.navigateTo()` - reveal the collection in the editor
 
 ### Collection Fields
-- `framer.getFields(collectionId)` - list fields
-- `framer.getField(collectionId, fieldId)` - get single field
-- `framer.createField(collectionId, fieldData)` - create field
-- `framer.updateField(collectionId, fieldId, fieldData)` - update field
-- `framer.deleteField(collectionId, fieldId)` - delete field
+- `collection.getFields()` - list fields as `Field[]`
+- `collection.addFields(fields: CreateField[])` - create fields, e.g. `[{ type: "string", name: "Name" }]`
+- `collection.removeFields(fieldIds: string[])` - remove fields by ID
+- `collection.setFieldOrder(fieldIds: string[])` - reorder fields
+- `field.setAttributes({ name })` - rename a field
+
+### Collection Items
+- `collection.getItems()` - list all items as `CollectionItem[]`. No pagination options exist
+- `collection.addItems(items: CollectionItemInput[])` - create or update many items in one call. An item with an `id` updates that item; an item without an `id` is created and requires a unique `slug`. Returns `void`, so re-read with `getItems()` to learn created IDs
+- `collection.removeItems(itemIds: string[])` - remove items by ID
+- `collectionItem.setAttributes({ slug, fieldData })` - update one item
+- `collectionItem.remove()` - remove one item
+
+### Field Data Keys
+
+`fieldData` is keyed by **field ID**, never by field name. Read `collection.getFields()` first, build a name to ID map, and translate on every read and write. Typed entries look like `{ type: "string", value: "Text" }`, `{ type: "number", value: 29.99 }`, and `{ type: "boolean", value: true }`.
 
 ### Field Types Supported
 - `string` - text
@@ -55,15 +58,14 @@
 
 ## Plugin Data Storage
 
-**NOT AVAILABLE** in public API. No `getPluginData` / `setPluginData` methods found.
+**Partially available.** There is no project-wide `framer.setPluginData`, but collections and items carry per-node plugin data:
 
-**Workaround**: Store data in a dedicated CMS collection (e.g., "Ecom-Link Config") with items for:
-- Connection credentials (encrypted at app level)
-- Sync snapshots
-- Sync history
-- Settings
+- `collection.setPluginData(key, value: string | null)` / `collection.getPluginData(key)`
+- `collectionItem.setPluginData(key, value: string | null)` / `collectionItem.getPluginData(key)`
 
-**Security note**: Plugin data stored in CMS is visible to users with CMS access. For MVP (free app), this is acceptable. Future: consider Framer's managed collection API if it adds plugin-scoped storage.
+**Current workaround in use**: connection records live as items in a dedicated CMS collection named "Ecom-Link Internal", with fields keyed by name and translated to field IDs at the SDK boundary (see `src/storage/connections.ts`).
+
+**Security note**: Plugin data stored in CMS is visible to users with CMS access. For MVP (free app), this is acceptable. Future: consider per-node plugin data for secrets if size limits allow, or Framer's managed collection API if it adds plugin-scoped storage.
 
 ## AI Capabilities
 
@@ -79,8 +81,12 @@
 - `framer.showUI(options)` - show plugin UI panel
 
 ### Permissions
-- `framer.useIsAllowedTo(action)` - check if action is allowed
-- Permission system for canvas operations
+- `framer.isAllowedTo(...methods)` - synchronous boolean check, **required before every protected call**
+- `framer.subscribeToIsAllowedTo(...methods, callback)` - subscribe to permission changes
+- `useIsAllowedTo(...methods)` - React hook version (re-renders on change)
+- Protected methods must be checked first or the SDK errors with `Invoking protected message type "..." without checking permission first`. Strings used by this plugin: `"createCollection"`, `"Collection.addFields"`, `"Collection.addItems"`, `"Collection.removeItems"`
+- Permission is per project and per account: "Plugins can do only what the user can", so a viewer-only account gets `false` even when the call itself is shaped correctly
+- **In use in this plugin**: `assertCanEditCms()` in `src/storage/connections.ts` runs the synchronous `framer.isAllowedTo(...)` check before every write, and `useCanEditCms()` in `src/lib/permissions.ts` bridges the reactive `useIsAllowedTo(...)` hook into views so write actions are disabled and a "CMS Editing Blocked" notice shows while the account lacks edit access
 
 ### Notifications
 - `framer.notify(message, options?)` - show toast notifications
@@ -102,14 +108,14 @@
 1. **Storage strategy**: Create a hidden CMS collection "Ecom-Link Internal" for plugin data
 2. **AI feature**: Mark as blocked in PROGRESS.md; reduce to stub or defer to post-MVP
 3. **Image handling**: Use `framer.addImage()` for all product images (D7)
-4. **Batch operations**: Use `batchUpdateItems()` for efficient sync
-5. **Pagination**: All list operations support pagination; implement in sync engine
+4. **Batch operations**: Use `collection.addItems(items[])` for efficient sync. It creates and updates in one call
+5. **Pagination**: `getItems()` has no pagination options; it returns everything. Load size must be tested during implementation
 
 ## Open Questions (Resolved)
 
 1. ~~AI capability surface~~: **NOT AVAILABLE** in v4.1.0. Spec 006 blocked.
 2. ~~Plugin data encryption~~: Store in CMS collection; document security limitations
-3. ~~CMS batch-write size~~: `batchUpdateItems()` available; test limits during implementation
+3. ~~CMS batch-write size~~: `collection.addItems(items[])` accepts arrays; test limits during implementation
 4. ~~Gallery images cap~~: Decision needed (recommend 10 images max)
 
 ---
@@ -121,75 +127,59 @@
 **List all collections**:
 ```typescript
 const collections = await framer.getCollections()
-// Returns: Collection[]
+// Returns: Collection[] with id, name, getFields(), getItems(), addItems()
 ```
 
-**Get collection by ID**:
+**Find a collection by name**:
 ```typescript
-const collection = await framer.getCollection("collection-id")
-// Returns: Collection | null
+const internal = collections.find((c) => c.name === "Ecom-Link Internal")
 ```
 
-**List items in a collection**:
+**List items and fields together** (fieldData is keyed by field ID):
 ```typescript
-const items = await framer.getItems("collection-id", {
-  limit: 100,  // Max items per page
-  offset: 0    // Pagination offset
-})
-// Returns: CollectionItem[]
-```
-
-**Get single item**:
-```typescript
-const item = await framer.getItem("collection-id", "item-id")
-// Returns: CollectionItem | null
+const [fields, items] = await Promise.all([
+  collection.getFields(),
+  collection.getItems(),
+])
+const nameById = new Map(fields.map((f) => [f.id, f.name]))
 ```
 
 ### Creating and Updating Items
 
-**Create new item**:
+**Create items** (each new item needs a unique slug):
 ```typescript
-await framer.createItem("collection-id", {
-  fieldData: {
-    name: { type: "string", value: "Product Name" },
-    price: { type: "number", value: 29.99 },
-    featured: { type: "boolean", value: true },
-    description: { type: "formattedText", value: "<p>HTML content</p>" },
-    image: { type: "image", value: "asset-id" },
-    status: { type: "enum", value: "publish" }
-  }
-})
-```
-
-**Update existing item**:
-```typescript
-await framer.updateItem("collection-id", "item-id", {
-  fieldData: {
-    price: { type: "number", value: 39.99 },
-    stock_quantity: { type: "number", value: 50 }
-  }
-})
-```
-
-**Note**: The `updateItem` method signature in the types shows it takes `collectionId`, `itemId`, and `itemData`. The `itemData` structure follows the same pattern as `createItem` with a `fieldData` object containing typed field entries.
-
-### Batch Operations
-
-**`batchUpdateItems`** - Update multiple items in one call:
-```typescript
-framer.batchUpdateItems(collectionId, [
-  { id: "item-1", fieldData: { name: { type: "string", value: "Updated" } } },
-  { id: "item-2", fieldData: { price: { type: "number", value: 29.99 } } }
+await collection.addItems([
+  {
+    slug: "product-123",
+    fieldData: {
+      [nameField.id]: { type: "string", value: "Product Name" },
+      [priceField.id]: { type: "number", value: 29.99 },
+      [featuredField.id]: { type: "boolean", value: true },
+    },
+  },
 ])
 ```
 
-**Note**: Batch operations are more efficient than individual updates. Use for sync operations.
+**Update items in the same call** by including an `id`. The SDK does not document merge semantics for fieldData on update, so send the complete field set every time:
+```typescript
+await collection.addItems([
+  {
+    id: existingItem.id,
+    fieldData: {
+      [nameField.id]: { type: "string", value: "Updated Name" },
+      [priceField.id]: { type: "number", value: 39.99 },
+    },
+  },
+])
+```
+
+**Note**: `addItems` returns `void`. To learn the ID of a created item, re-read `getItems()` and match on the unique slug you generated.
 
 ### Deletion
 
-**`deleteItem`** - Remove an item:
+**`removeItems`** - Remove many items in one call:
 ```typescript
-await framer.deleteItem(collectionId, itemId)
+await collection.removeItems([item1.id, item2.id])
 ```
 
 ## Field Type Mapping
@@ -230,18 +220,25 @@ For WooCommerce → Framer CMS mapping:
 **Implementation**:
 ```typescript
 // Create item with woo_id
-await framer.createItem(collectionId, {
-  fieldData: {
-    woo_id: { type: "string", value: "123" },
-    name: { type: "string", value: "Product Name" },
-    // ... other fields
-  }
-})
+await collection.addItems([
+  {
+    slug: `woo-${wooId}`,
+    fieldData: {
+      [wooIdField.id]: { type: "string", value: "123" },
+      [nameField.id]: { type: "string", value: "Product Name" },
+      // ... other fields
+    },
+  },
+])
 
 // Find existing item by woo_id
-const items = await framer.getItems(collectionId)
-const existing = items.find(item => 
-  item.fieldData.woo_id?.value === "123"
+const [fields, items] = await Promise.all([
+  collection.getFields(),
+  collection.getItems(),
+])
+const wooField = fields.find((f) => f.name === "woo_id")
+const existing = items.find(
+  (item) => wooField && item.fieldData[wooField.id]?.value === "123"
 )
 ```
 
@@ -263,11 +260,14 @@ const imageAsset = await framer.addImage(
 )
 
 // Use in item field
-await framer.createItem(collectionId, {
-  fieldData: {
-    image: { type: "image", value: imageAsset.id }
-  }
-})
+await collection.addItems([
+  {
+    id: existingItem.id,
+    fieldData: {
+      [imageField.id]: { type: "image", value: imageAsset.id },
+    },
+  },
+])
 ```
 
 **Gallery images**: Store as array of image IDs (max 10 recommended).
@@ -278,6 +278,7 @@ Common errors and handling:
 
 | Error | Cause | Handling |
 |-------|-------|----------|
+| `Error on typia.createAssert(): invalid type on $input[N]` | SDK input shape mismatch, such as passing an object where the SDK expects a string | Check the call site against the class-shaped API above |
 | Collection not found | Invalid collection ID | Show connection setup UI |
 | Permission denied | Plugin lacks CMS access | Request permissions |
 | Rate limit | Too many API calls | Implement retry with backoff |

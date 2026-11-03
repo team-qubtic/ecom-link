@@ -1,0 +1,30 @@
+{
+	"$comment": "Bottom navigation items. Add or remove entries to change the nav bar. 'icon' must be a lucide-react icon name registered in NAV_ICONS in src/components/ui/BottomNav.tsx. Store connections are added from the Connections page, so there is no Add Store item.",
+	"items": [
+		{
+			"id": "dashboard",
+			"label": "Home",
+			"icon": "Home"
+		},
+		{
+			"id": "catalogue",
+			"label": "Catalogue",
+			"icon": "DatabaseArrowDown"
+		},
+		{
+			"id": "components",
+			"label": "Components",
+			"icon": "Component"
+		},
+		{
+			"id": "connections",
+			"label": "Connections",
+			"icon": "Link"
+		},
+		{
+			"id": "settings",
+			"label": "Settings",
+			"icon": "Settings"
+		}
+	]
+}

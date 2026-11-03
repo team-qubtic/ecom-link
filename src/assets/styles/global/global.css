@@ -1,5 +1,5 @@
 /* ============================================================================
-   Ecom-Link global styles - Liquid Glassmorphism Design System
+   Ecom-Link global styles — "Obsidian Studio"
 
    Everything shared across components lives here: the base reset, buttons,
    badges, notices, text helpers, and the shared toggle row. Component-scoped
@@ -26,18 +26,18 @@ body,
 
 body {
   font-family: var(--font-sans);
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 450;
+  font-size: var(--text-base);
+  line-height: var(--leading-base);
+  font-weight: 400;
   color: var(--text-secondary);
   background: var(--bg-app);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Fluid ambient mesh background */
+/* Ambient aurora: fixed layer behind the app, top-anchored glow. */
 body::before {
-  content: '';
+  content: "";
   position: fixed;
   inset: 0;
   background: var(--bg-mesh);
@@ -45,60 +45,102 @@ body::before {
   z-index: 0;
 }
 
+::selection {
+  background: var(--tint-dimmed);
+  color: var(--text-primary);
+}
+
 #root {
   position: relative;
   z-index: 1;
 }
 
+/* App shell: flex column so views scroll and the bottom nav stays pinned
+   inside the 350px-wide plugin window. */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Flex: 1 with min-height: 0 so the scrollable view owns the remaining
+   height instead of pushing the nav off-screen. */
+.app-shell-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 /* ============================================================================
-   Badges
+   Shared Page Chrome (header + section labels used by every view)
+   ============================================================================ */
+
+/* Section eyebrow: tiny tracked uppercase label above a group. */
+.section-title {
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  margin: 0;
+  padding: 0 var(--space-xxs);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ============================================================================
+   Badges — soft chips: tinted fill + dot, no hard border.
    ============================================================================ */
 
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 10px;
-  line-height: 12px;
-  font-weight: 550;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 3px 8px;
-  border-radius: var(--radius-xs);
-  border: 1px solid transparent;
+  gap: 5px;
+  font-size: var(--text-xs);
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 4px 8px;
+  border-radius: var(--radius-full);
   white-space: nowrap;
 }
 
 .badge-dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   flex: none;
   border-radius: 50%;
   background: currentColor;
+  box-shadow: 0 0 6px 0 currentColor;
 }
 
 .badge-primary {
   color: var(--tint);
   background: var(--tint-dimmed);
-  border-color: var(--tint-border);
 }
 
 .badge-success {
   color: var(--success);
   background: var(--success-bg);
-  border-color: var(--success);
 }
 
 .badge-error {
   color: var(--danger);
   background: var(--danger-bg);
-  border-color: var(--danger);
+}
+
+.badge-warning {
+  color: var(--warning);
+  background: var(--warning-bg);
 }
 
 .badge-neutral {
   color: var(--text-secondary);
-  background: var(--bg-surface-elevated);
-  border-color: var(--border-default);
+  background: var(--bg-inset);
 }
 
 /* ============================================================================
@@ -107,25 +149,34 @@ body::before {
 
 .btn {
   font-family: var(--font-sans);
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 500;
+  font-size: var(--text-base);
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
-  padding: 8px 14px;
+  height: 32px;
+  padding: 0 13px;
   cursor: pointer;
-  transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    background 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 100ms ease-out;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  position: relative;
-  overflow: hidden;
+  gap: 6px;
+  white-space: nowrap;
   width: fit-content;
 }
 
+.btn svg {
+  flex: none;
+}
+
 .btn:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
@@ -133,88 +184,48 @@ body::before {
   transform: scale(0.97);
 }
 
-/* Primary button with liquid glass effect */
+/* Primary: the one gradient surface in the product; reserved for the
+   main action on a screen. */
 .btn-primary {
   color: #ffffff;
-  background: linear-gradient(135deg, var(--tint) 0%, var(--tint-active) 100%);
-  border-color: var(--tint);
+  background: var(--accent-gradient);
   box-shadow: var(--shadow-btn-primary);
 }
 
-.btn-primary::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--liquid-glass-gradient);
-  opacity: 0;
-  transition: opacity 160ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
 .btn-primary:not(:disabled):hover {
-  background: linear-gradient(135deg, var(--tint-hover) 0%, var(--tint-active) 100%);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.35),
-    0 0 24px -3px rgba(0, 153, 255, 0.5),
-    0 4px 12px rgba(0, 153, 255, 0.4);
+  filter: brightness(1.1);
 }
 
-/* Secondary button with glass effect */
+.btn-primary:not(:disabled):active {
+  filter: brightness(0.96);
+}
+
+/* Secondary: quiet raised neutral. */
 .btn-secondary {
   color: var(--text-primary);
-  background: var(--bg-surface);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: var(--bg-surface-elevated);
   border-color: var(--border-default);
-  box-shadow: var(--shadow-liquid-glass);
+  box-shadow: var(--shadow-xs);
 }
 
 .btn-secondary:not(:disabled):hover {
-  background: var(--bg-surface-elevated);
+  background: var(--bg-card-hover);
   border-color: var(--border-strong);
-  box-shadow: var(--shadow-glass);
 }
 
-/* Danger button */
-.btn-danger {
-  color: #ffffff;
-  background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
-  border-color: var(--danger);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.35),
-    0 3px 10px rgba(244, 63, 94, 0.4);
-}
-
-.btn-danger:not(:disabled):hover {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.35),
-    0 0 24px -3px rgba(244, 63, 94, 0.5),
-    0 4px 12px rgba(244, 63, 94, 0.4);
-}
-
-/* Ghost buttons */
+/* Ghost: text-only actions; hover paints a subtle inset. */
 .btn-ghost,
 .btn-ghost-danger {
   color: var(--text-secondary);
   background: transparent;
   border-color: transparent;
-  padding: 4px 12px;
-}
-
-.btn-ghost-icon {
-  color: var(--text-secondary);
-  padding: 8px;
-  font-size: 14px;
-  background: #f8f8f8;
-}
-
-.btn-ghost-icon:hover {
-  background: var(--bg-surface-elevated);
-  color: var(--text-primary);
+  height: 26px;
+  padding: 0 10px;
+  font-size: var(--text-sm);
 }
 
 .btn-ghost:not(:disabled):hover {
-  background: var(--bg-surface-elevated);
+  background: var(--bg-inset);
   color: var(--text-primary);
 }
 
@@ -227,10 +238,29 @@ body::before {
   color: var(--danger);
 }
 
+.btn-danger {
+  color: #ffffff;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.22),
+    0 1px 2px rgba(185, 28, 28, 0.4),
+    0 4px 12px -4px rgba(239, 68, 68, 0.5);
+}
+
+.btn-danger:not(:disabled):hover {
+  filter: brightness(1.08);
+}
+
 .btn-small {
-  font-size: 11px;
-  line-height: 14px;
-  padding: 5px 10px;
+  height: 26px;
+  padding: 0 10px;
+  font-size: var(--text-sm);
+}
+
+/* Square icon-only ghost button (row actions like edit/delete). */
+.btn-icon {
+  width: 26px;
+  padding: 0;
 }
 
 .btn-block {
@@ -238,32 +268,38 @@ body::before {
 }
 
 .btn-lg {
-  padding: 10px 16px;
+  height: 38px;
+  padding: 0 16px;
+  font-size: var(--text-md);
+  border-radius: var(--radius-md);
 }
 
-/* Icon buttons */
+/* Icon buttons (help, close, overflow). */
 .icon-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   padding: 0;
   border-radius: var(--radius-sm);
   border: none;
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    background 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 100ms ease-out;
 }
 
 .icon-button:not(:disabled):hover {
-  background: var(--bg-surface-elevated);
+  background: var(--bg-inset);
   color: var(--text-primary);
 }
 
-.icon-button:active {
-  transform: scale(0.95);
+.icon-button:not(:disabled):active {
+  transform: scale(0.94);
 }
 
 /* ============================================================================
@@ -274,58 +310,60 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-md);
   padding: var(--space-xs) 0;
 }
 
 /* ============================================================================
-   Notices
+   Notices — tinted panels with an icon chip; content stays dark-text-safe.
    ============================================================================ */
 
 .notice {
   border-radius: var(--radius-md);
-  padding: 12px;
+  padding: var(--space-md);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   border: 1px solid;
+  font-size: var(--text-sm);
+  line-height: var(--leading-base);
 }
 
 .notice p {
   margin: 0;
-  line-height: 16px;
 }
 
 .notice-title {
-  font-size: 12px;
-  line-height: 16px;
+  font-size: var(--text-base);
+  line-height: var(--leading-base);
   font-weight: 600;
   margin: 0;
 }
 
 .notice-error {
   background: var(--danger-bg);
-  border-color: var(--danger);
+  border-color: rgba(248, 113, 113, 0.3);
   color: var(--danger);
 }
 
 .notice-warning {
   background: var(--warning-bg);
-  border-color: var(--warning);
+  border-color: rgba(251, 191, 36, 0.28);
   color: var(--warning);
 }
 
-.notice-warning p {
-  color: var(--warning);
+.notice-success {
+  background: var(--success-bg);
+  border-color: rgba(52, 211, 153, 0.3);
+  color: var(--success);
 }
 
 .notice-steps {
   margin: 0;
-  padding-left: 20px;
+  padding-left: 18px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  color: var(--warning);
 }
 
 /* ============================================================================
@@ -338,8 +376,8 @@ body::before {
 }
 
 .small {
-  font-size: 11px;
-  line-height: 14px;
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
 }
 
 /* ============================================================================
@@ -347,8 +385,8 @@ body::before {
    ============================================================================ */
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
 }
 
 ::-webkit-scrollbar-track {
@@ -356,12 +394,16 @@ body::before {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
-  border-radius: var(--radius-xs);
+  background: var(--bg-inset-strong);
+  border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: var(--border-strong);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 /* ============================================================================
@@ -371,17 +413,114 @@ body::before {
 *:focus-visible {
   outline: 2px solid var(--tint);
   outline-offset: 2px;
+  border-radius: var(--radius-xs);
 }
 
+/* ============================================================================
+   Modals
+   ============================================================================ */
 
-/* Framer Default color override */
-
-[data-theme="dark"] button,
-[data-framer-theme="dark"] button {
-	background-color: transparent;
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  /* A near-black scrim reads correctly over both themes. */
+  background: rgba(6, 7, 12, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: modal-fade-in 160ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-	/* 
-	[data-theme="light"] *,
-	[data-framer-theme="light"] * {
-		background-color: transparent;
-	} */
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  width: min(320px, 100%);
+  max-height: calc(100vh - 48px);
+  background: var(--bg-glass-strong);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  animation: modal-pop-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.modal-title {
+  margin: 0;
+  font-size: var(--text-md);
+  line-height: var(--leading-md);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  overflow-y: auto;
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.modal-footer .btn {
+  flex: 1;
+}
+
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ============================================================================
+   Native select baseline
+
+   The plugin does not import framer.css (its fixed control styles fought the
+   design system in every theme), so selects need their own dropdown-arrow
+   treatment for the appearance:none style used in the mapping modal.
+   ============================================================================ */
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='none'><path d='m1 2.75 2.293 2.293a1 1 0 0 0 1.414 0L7 2.75' fill='transparent' stroke-width='1.5' stroke='%23888888' stroke-linecap='round' stroke-linejoin='round'></path></svg>");
+  background-position: right 10px center;
+  background-repeat: no-repeat;
+  padding-right: 24px;
+}

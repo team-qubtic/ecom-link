@@ -1,8 +1,8 @@
 # Ecom-Link Progress
 
-> Last updated: 2026-10-04
+> Last updated: 2026-10-20
 > Project: Framer plugin connecting Framer with eCommerce platforms (WooCommerce first)
-> Current phase: **Spec 001 and 002 implemented. Next: spec 003 (product import and sync).**
+> Current phase: **Specs 001 to 004 implemented. Next: spec 005 (Help Guide).**
 
 ## Project Status at a Glance
 
@@ -15,7 +15,7 @@
 | 5-9. Coding/UI/UX/forms/docs conventions | Binding rules captured in agent files and specs |
 | 10. Sub-agents | Done (9 files in `.github/agents/`, verified complete) |
 | API verification | Done (`docs/API-NOTES.md`) |
-| Implementation | **Starting now** |
+| Implementation | **Specs 001 to 004 implemented** |
 
 ---
 
@@ -51,8 +51,8 @@ Layered design: views → sync engine → providers → storage → Framer Plugi
 |---|---|---|
 | `001-provider-architecture.md` | M1 provider contract, registry, capability flags | Ready for build |
 | `002-store-connection-and-cors.md` | M2+M5 connection, masked credentials, typed errors, CORS/preflight detection | **Implemented 2026-10-03** (amended: CMS-collection storage) |
-| `003-product-import-and-sync.md` | M3+M4 paged import, `woo_id` identity, watermark, safety cap, cancellation, reports, Woo adapter | Ready for build |
-| `004-two-way-sync-write-back.md` | M11 snapshot change detection, preview gate, conflict resolution, batch writes, no-delete rail | Ready for build |
+| `003-product-import-and-sync.md` | M3+M4 paged import, `woo_id` identity, watermark, safety cap, cancellation, reports, Woo adapter | **Implemented 2026-10-04** (see section 11) |
+| `004-two-way-sync-write-back.md` | M11 snapshot change detection, preview gate, conflict resolution, batch writes, no-delete rail | **Implemented 2026-10-20** (see section 12) |
 | `005-help-guide.md` | M6 first-run guide | Ready for build |
 | `006-ai-content-assist.md` | M7 editable AI drafts for empty content | **Blocked: see open question** |
 | `007-dashboard-settings-reliability.md` | M8+M9 dashboard, modal router, error sentence mapping | Ready for build |
@@ -126,15 +126,51 @@ Automated tests for every spec 001 acceptance criterion. Created directly under 
 
 Note for the Architect: `EcommerceProvider<false>` declares `updateProductFields` as a required property of type `never`, so a read-only provider cannot be authored without a single type assertion (see `mockReadOnlyProvider`). A future amendment making the property optional (`updateProductFields?: never`) would remove that assertion. Surfaced as an observation, not silently resolved.
 
+### 11. Spec 003 Implementation (2026-10-04)
+
+**Shipped**: product import and incremental sync, end to end.
+
+- `src/providers/woocommerce/`: mapper plus the provider product methods (paged product listing and variants) over the spec 002 REST client.
+- `src/sync/`: `engine.ts` (paged pull with page size 100, `woo_id` identity matching with upsert in place, caps with pending-write-aware loop guards, cancellation, page-level resume, plan-limit stop, and notes for watermark fallback, safety cap, gallery cap, watermark save failure, rate limit, image, variants, and write failures), `identity.ts`, `watermark.ts` (validating setter plus a raw reader for fallback detection), `report.ts` (status badges, count lines, first 20 failures kept).
+- `src/storage/`: `settings.ts` (per-connection mapping, statuses, caps), `snapshots.ts` (baselines for future change detection), `history.ts` (run records).
+- UI: `MappingModal` (collection picker, type-aware field mapping with Two-way switches, statuses, the three caps, duplicate-collection notice), `SyncProgress` (page and item counts, cancel that finishes the current page first), `SyncReportModal` (status, counts, notes, retry from page, deleted-products check with confirmed removal), Dashboard card wiring (**Start sync** before first mapping, **Sync now** after).
+- Tests: engine, watermark, settings, snapshots, history, mapper, client, provider, card, permissions, and string-rule suites; 145 tests across 14 files, all green.
+- Docs shipped same run: new `docs/help/Sync Products.md` and a refreshed "What Comes Next" section in `docs/help/Getting Started.md`.
+- `src/App.tsx`: plugin window set to the binding minimum (350px wide, 600px min height).
+
+**Notes for the next run**:
+- The mapping wizard is first-run only; once settings exist, the card syncs with the saved mapping. Editing mapping and caps after the first run arrives with the spec 007 settings screen, which the in-app safety-cap note already references ("Settings").
+- The watermark advances only after a fully successful run; paused runs resume from the failed page and cover everything unconfirmed.
+- Re-running after a safety-cap stop is by design: unchanged items are skipped but still counted toward the cap, so very large stores complete across several runs as the limit is raised.
+- Spec 008 lists a "Sync Products.md" page; it now exists, so spec 008 only needs to reconcile the Connections page name and add the remaining pages.
+
+### 12. Spec 004 Implementation (2026-10-20)
+
+**Shipped**: two-way sync write-back, end to end.
+
+- `src/sync/conflict.ts`: platform value equality with numeric coercion for number fields, snapshot classification into local/remote/both edits, pending change shaping, per-product grouping, CMS-to-platform coercion, display truncation, and field labels for the review UI.
+- `src/providers/woocommerce/`: write path with a single `PUT /products/{id}` under 10 changed products and `POST /products/batch` (100 per batch) above it, null-aware payloads (null sale price clears the sale, `manage_stock` follows the quantity), and a write preflight against read-only keys.
+- `src/sync/engine.ts`: push phase after every clean pull, review gate that stops the run for merchant confirmation, Framer-only items never sent to the store, no-delete rail (store removals never delete CMS items), per-write snapshot refresh so each edit is offered exactly once, and the watermark advancing only after a clean run.
+- `src/sync/report.ts` + `SyncReportModal`: "Store Changes" extension lines so write results land in the same run report.
+- UI: `WriteBackReviewModal` + `WriteBackDiff` change table with per-row Keep/Send decisions, `ConflictResolutionModal` for both-sides conflicts, `MappingModal` writable-field gating with a read-only notice, `ConnectionModal` key-scope upgrade flow.
+- Tests: 180 across 15 files, all green (+35 over spec 003).
+- Docs shipped same run: new `docs/help/Sync Inventory Both Ways.md` plus cross-links in `docs/help/Sync Products.md` and `docs/help/Connections.md`.
+
+**Notes for the next run**:
+- Woo `writableFields` intentionally omits `price`: WooCommerce computes it from regular and sale price, so writes send `regular_price` and `sale_price` only.
+- Nullable number fields (sale price, stock quantity) push null to clear the store value; required fields (price, regular price) drop empty Framer values so the store keeps its price and the next pull restores it in Framer.
+- Status fields accept only their store values; any other Framer text is omitted and the store keeps its own status.
+- The vitest typecheck pass is stricter than the editor TS server, and truncated terminal output can hide "Unhandled Source Error" blocks: when a run exits with code 1, inspect the full output for errors under `src/` before treating them as node_modules noise.
+
 ---
 
 ## Open Questions (resolve before/during build)
 
 1. ~~**BLOCKING (spec 006)**: Confirm the exact AI capability surface in `@framer/plugin` v4~~ **RESOLVED 2026-10-03**: AI APIs NOT AVAILABLE in v4.1.0. Spec 006 (M7) must be reduced to stub or deferred to post-MVP.
 2. (spec 002) Plugin-data encryption for secrets: depends on what `@framer/plugin` v4 exposes; otherwise store in plugin data with masked reads and flag for Security review. **Status**: **RESOLVED 2026-10-03**. No plugin-scoped storage exists; connections are stored in the internal CMS collection with masked reads everywhere, Security-reviewed, and the limitation documented on the Connections help page.
-3. (spec 003) Framer CMS API batch-write size: measure during implementation; engine yields between writes regardless. **Status**: `batchUpdateItems()` available; test limits during Task 4.
-4. (spec 003) Gallery images cap (proposed 10) needs a decision. **Status**: Still open. Recommend 10 images max. Decide during Task 4.
-5. (spec 004) Price decimal round-trip normalization (Woo returns strings like "21.99"); needs a fixture test. **Status**: Still open. Implement during Task 5.
+3. (spec 003) Framer CMS API batch-write size: measure during implementation; engine yields between writes regardless. **Status**: **RESOLVED 2026-10-04**: the engine batches per-page writes and yields between pages; the item safety cap keeps batches at or below the page size of 100. Real-store limits get a final check in the release pass.
+4. (spec 004) Gallery images cap (proposed 10) needs a decision. **Status**: **RESOLVED 2026-10-04**: the default gallery cap is 10, adjustable in the mapping wizard.
+5. (spec 004) Price decimal round-trip normalization (Woo returns strings like "21.99"); needs a fixture test. **Status**: **RESOLVED 2026-10-20**: `cmsValueToPlatform` applies numeric coercion to number fields before comparison, and fixture tests cover the round trip (raw "21.99" in Framer compares equal to 21.99 from the store; a mismatched 19.99 is still detected).
 6. (spec 008) Docs hosting location beyond the repo: release checklist item, not MVP code. **Status**: Deferred to release.
 
 ---
@@ -169,14 +205,22 @@ Note for the Architect: `EcommerceProvider<false>` declares `updateProductFields
 - ✅ Docs shipped same run: `docs/help/Getting Started.md`, `docs/help/Connections.md`
 - Form handling: no form library added (Orchestrator decision); native form submit with typed handlers, matching the Form Actions pattern within available dependencies.
 
-### Task 4: Implement spec 003 (Woo adapter + sync engine)
-- `src/providers/woocommerce/` (client, mapper, provider)
-- `src/sync/` (engine, identity, watermark, report), `src/storage/` (snapshots, history)
-- MappingModal, SyncReportModal, SyncProgress
-- Companion WordPress plugin source (CORS helper) can follow after.
+### Task 4: Implement spec 003 (Woo adapter + sync engine) ✅ DONE
+- ✅ `src/providers/woocommerce/` (client, mapper, provider product methods)
+- ✅ `src/sync/` (engine, identity, watermark, report) + `src/storage/` (snapshots, history, settings)
+- ✅ MappingModal, SyncReportModal, SyncProgress, Dashboard card wiring
+- ✅ Tests green: 145 tests across 14 files
+- ✅ Docs shipped same run: `docs/help/Sync Products.md`
+- Companion WordPress plugin source (CORS helper) still to be scheduled.
 
-### Task 5: Implement spec 004 (two-way sync)
-- `src/sync/conflict.ts`, push phase, WriteBackReviewModal, ConflictResolutionModal, key upgrade flow.
+### Task 5: Implement spec 004 (two-way sync) ✅ DONE
+- ✅ `src/sync/conflict.ts`: change detection, pending changes, per-product grouping, labels
+- ✅ WooCommerce write path: single PUT, batch POST, null-aware payloads, write preflight
+- ✅ Engine push phase: review gate, no-delete rail, snapshot refresh, watermark guard
+- ✅ `WriteBackReviewModal` + `WriteBackDiff`, `ConflictResolutionModal`
+- ✅ `MappingModal` two-way limits, `ConnectionModal` key upgrade flow
+- ✅ Report "Store Changes" extension; help page `Sync Inventory Both Ways.md` + cross-links
+- ✅ Tests green: 180 tests across 15 files (see section 12)
 
 ### Task 6: Implement specs 005 + 006 (Help Guide + AI)
 - HelpGuide modal + first-run detection (005)
@@ -246,6 +290,20 @@ scoped CSS Modules (hashed class names), eliminating the monolithic 1272-line `A
 ### Docs Updated
 - `INSTRUCTION.md`: design tokens path and Switch styling reference now point to the new files.
 - `docs/FRAME_DESIGN_SYSTEM.md`: CSS variables reference points to `src/assets/styles/variables.css`.
+
+---
+
+## Current Work (2026-10-20): Spec 004 Two-Way Sync Write-Back
+
+### Just Completed
+- ✅ Task 5: spec 004 two-way sync write-back, end to end (see section 12)
+- ✅ Full validation: 180 tests across 15 files; remaining typecheck noise is the accepted node_modules and pre-existing-cast list only
+
+### Next Up
+- 🔄 **Task 6: Implement specs 005 + 006 (Help Guide + AI)**
+
+### In Progress
+- None (ready to start Task 6)
 
 ---
 

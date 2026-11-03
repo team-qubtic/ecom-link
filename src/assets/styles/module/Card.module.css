@@ -1,24 +1,22 @@
-/* Card: Polaris-style compound card. Class names are camelCase so JSX can
-   access them with dot notation (styles.uiCard). */
+/* Card: Polaris-style compound card. Solid surface, hairline border, and
+   dividers between rows. Class names are camelCase so JSX can access them
+   with dot notation (styles.uiCard). */
 
 .uiCard {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  width: 100%;	
+  width: 100%;
   background: var(--bg-card);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--border-default);
-  border-style: dashed;
   border-radius: var(--radius-md);
-  /* box-shadow: var(--shadow-liquid-glass); */
-  /* overflow: hidden; */
+  box-shadow: var(--inset-highlight), var(--shadow-xs);
+  overflow: hidden;
 }
 
-.uiCard input  {
-	width: calc(100%);
-	background-color: transparent;
+.uiCard input {
+  width: 100%;
+  background: transparent;
 }
 
 /* Surface tones (Polaris background prop). */
@@ -114,7 +112,7 @@
   margin: 0;
   font-size: 12px;
   line-height: 16px;
-  font-weight: 450;
+  font-weight: 500;
   color: var(--text-secondary);
 }
 

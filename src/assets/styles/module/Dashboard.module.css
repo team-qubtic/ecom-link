@@ -1,8 +1,9 @@
-/* Dashboard: shell, header, cards, connection list, and loading state.
-   Class names are camelCase so JSX can access them with dot notation. The
-   rise-in / pop-in / spin keyframes are local to this module. */
+/* Dashboard + shared page chrome: header, content column, sections. The
+   Connections page imports this module too, so page-level classes live
+   here. Class names are camelCase so JSX can access them with dot
+   notation. rise-in / pop-in / shimmer keyframes are local to this module. */
 
-.dashboard {
+.page {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -10,21 +11,20 @@
   background: transparent;
 }
 
-/* Sticky header with liquid glass effect */
-.dashboardHeader {
+/* Sticky glass header */
+.pageHeader {
   position: sticky;
   top: 0;
   z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 12px 20px;
-  /* background: var(--bg-glass-nav); */
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border-default);
-  box-shadow: var(--shadow-liquid-glass);
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .headerBrand {
@@ -34,16 +34,25 @@
   min-width: 0;
 }
 
+/* Right-side header cluster: help + account actions. */
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex: none;
+}
+
+/* App mark: the one gradient tile in the chrome. */
 .headerLogo {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   flex: none;
-  border-radius: var(--radius-md);
+  border-radius: 9px;
   color: #ffffff;
-  background: linear-gradient(135deg, var(--tint) 0%, var(--tint-active) 100%);
+  background: var(--accent-gradient);
   box-shadow: var(--shadow-btn-primary);
 }
 
@@ -54,332 +63,396 @@
 .headerText {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   min-width: 0;
 }
 
-.dashboardTitle {
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 650;
+.pageTitle {
+  font-size: var(--text-lg);
+  line-height: var(--leading-lg);
+  font-weight: 700;
+  letter-spacing: -0.01em;
   margin: 0;
   color: var(--text-primary);
-  letter-spacing: -0.01em;
 }
 
-.dashboardSubtitle {
-  margin: 0;
-  font-size: 11px;
-  line-height: 14px;
-  font-weight: 450;
-  color: var(--text-tertiary);
-}
-
-/* Scrollable content area */
-.dashboardContent {
+/* Scrollable content column */
+.pageContent {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
-  padding: var(--space-md);
-  animation: rise-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  gap: var(--space-xl);
+  padding: var(--space-lg) var(--space-md) var(--space-md);
+  animation: rise-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
-
-/* ============================================================================
-   Section Layout
-   ============================================================================ */
 
 .section {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
-}
-
-.sectionTitle {
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-tertiary);
-  margin: 0;
-  padding: 0 var(--space-xs);
-}
-
-/* ============================================================================
-   Connection Types
-   ============================================================================ */
-
-.connectionTypes {
-  display: flex;
-  flex-direction: column;
   gap: var(--space-sm);
 }
 
-.connectionTypeCard {
+.sectionTitle {
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  margin: 0;
+  padding: 0 var(--space-xxs);
+}
+
+/* ============================================================================
+   Hero: active store status / connect prompt
+   ============================================================================ */
+
+.heroCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--inset-highlight), var(--shadow-sm);
+  animation: pop-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Active store: indigo edge to make the hero the anchor of the page. */
+.heroCardActive {
+  background:
+    linear-gradient(135deg, var(--tint-dimmed) 0%, transparent 55%),
+    var(--bg-card);
+  border-color: var(--tint-border);
+}
+
+.heroCardEmpty {
+  align-items: flex-start;
+}
+
+.heroTop {
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  padding: var(--space-md);
-  background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
 }
 
-.connectionTypeCard:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--border-strong);
-  box-shadow: var(--shadow-glass);
-}
-
-.connectionTypeDisabled {
-  opacity: 0.6;
-}
-
-.connectionTypeDisabled:hover {
-  background: var(--bg-card);
-  border-color: var(--border-default);
-  box-shadow: var(--shadow-sm);
-  cursor: not-allowed;
-}
-
-.connectionTypeIcon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  flex: none;
-  border-radius: var(--radius-md);
-  color: var(--tint);
-  background: var(--tint-dimmed);
-  box-shadow: var(--tint-glow);
-}
-
-.connectionTypeIcon svg {
-  display: block;
-}
-
-.connectionTypeDisabled .connectionTypeIcon {
-  color: var(--text-muted);
-  background: var(--bg-surface-elevated);
-  box-shadow: none;
-}
-
-.connectionTypeInfo {
+.heroText {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
   flex: 1;
   min-width: 0;
 }
 
-.connectionTypeHeader {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  justify-content: space-between;
-}
-
-.connectionTypeName {
-  font-size: 13px;
-  line-height: 18px;
+.heroTitle {
+  font-size: var(--text-md);
+  line-height: var(--leading-md);
   font-weight: 600;
+  letter-spacing: -0.01em;
   margin: 0;
   color: var(--text-primary);
+  overflow-wrap: anywhere;
 }
 
-.connectionTypeDescription {
-  font-size: 12px;
-  line-height: 16px;
+.heroDescription {
   margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-base);
   color: var(--text-secondary);
 }
 
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  font-size: 10px;
-  line-height: 14px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-tertiary);
-  background: var(--bg-surface-elevated);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-full);
-}
-
-/* ============================================================================
-   Support Links
-   ============================================================================ */
-
-.supportLinks {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-}
-
-.supportLink {
+.heroMeta {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-sm) var(--space-md);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  font-size: 13px;
-  line-height: 18px;
-  font-weight: 500;
-  text-decoration: none;
-  transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  flex-wrap: wrap;
+  gap: var(--space-sm);
 }
 
-.supportLink:hover {
-  background: var(--bg-card);
-  border-color: var(--border-default);
-  box-shadow: var(--shadow-sm);
-}
-
-.supportIcon {
+/* Round icon well on the empty-state hero. */
+.heroIconWrap {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 44px;
+  height: 44px;
   flex: none;
-  font-size: 16px;
+  border-radius: var(--radius-md);
+  color: var(--tint);
+  background: var(--tint-dimmed);
+}
+
+/* Loading skeleton (shimmer sweep). */
+.heroCardLoading {
+  flex-direction: row;
+  align-items: center;
+}
+
+.heroSkeletonTile {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+}
+
+.heroSkeletonLines {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex: 1;
+}
+
+.heroSkeletonLine {
+  height: 10px;
+  width: 60%;
+  border-radius: var(--radius-full);
+}
+
+.heroSkeletonLineShort {
+  height: 10px;
+  width: 38%;
+  border-radius: var(--radius-full);
+}
+
+.skeleton {
+  background: linear-gradient(
+    100deg,
+    var(--bg-inset) 40%,
+    var(--bg-inset-strong) 50%,
+    var(--bg-inset) 60%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
 }
 
 /* ============================================================================
-   Other Apps
+   Platforms grid
    ============================================================================ */
 
-.otherApps {
+/* Badges hug their content instead of stretching across the tile. */
+.platformTile :global(.badge) {
+  align-self: flex-start;
+}
+
+.platformGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-sm);
 }
 
-.appCard {
+.platformTile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--inset-highlight), var(--shadow-xs);
+  font-family: var(--font-sans);
+  text-align: left;
+  transition:
+    background 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 120ms ease-out;
+}
+
+.platformTileAvailable {
+  cursor: pointer;
+  border-color: var(--tint-border);
+}
+
+.platformTileAvailable:not(:disabled):hover {
+  background: var(--bg-card-hover);
+  border-color: var(--tint);
+  box-shadow: var(--inset-highlight), var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.platformTileAvailable:not(:disabled):active {
+  transform: translateY(0) scale(0.98);
+}
+
+.platformTileSoon {
+  background: transparent;
+  border-color: var(--border-subtle);
+  box-shadow: none;
+}
+
+.platformTileSoon .platformName {
+  color: var(--text-secondary);
+}
+
+.platformText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.platformName {
+  font-size: var(--text-base);
+  line-height: var(--leading-base);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.platformDescription {
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  color: var(--text-tertiary);
+}
+
+/* ============================================================================
+   Capabilities list
+   ============================================================================ */
+
+.capabilityList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-xs);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--inset-highlight), var(--shadow-xs);
+}
+
+.capabilityRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 7px var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+
+.capabilityRow + .capabilityRow {
+  border-top: 1px solid var(--border-subtle);
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.capabilityIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: var(--radius-sm);
+  color: var(--tint);
+  background: var(--tint-dimmed);
+}
+
+.capabilityText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.capabilityTitle {
+  font-size: var(--text-base);
+  line-height: var(--leading-base);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.capabilityDescription {
+  font-size: var(--text-xs);
+  line-height: 14px;
+  color: var(--text-tertiary);
+}
+
+/* ============================================================================
+   Support chips
+   ============================================================================ */
+
+.supportRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.supportChip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--inset-highlight), var(--shadow-xs);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.supportChip svg {
+  color: var(--text-tertiary);
+  transition: color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.supportChip:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-strong);
+}
+
+.supportChip:hover svg {
+  color: var(--tint);
+}
+
+/* ============================================================================
+   Footer
+   ============================================================================ */
+
+.pageFooter {
+  padding: var(--space-xs) var(--space-xxs) var(--space-sm);
+  text-align: center;
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  color: var(--text-muted);
+}
+
+/* ============================================================================
+   Connection list (shared with the Connections page)
+   ============================================================================ */
+
+.listCard {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
   padding: var(--space-md);
   background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.appCard:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--border-strong);
-  box-shadow: var(--shadow-glass);
-}
-
-.appName {
-  font-size: 13px;
-  line-height: 18px;
-  font-weight: 600;
-  margin: 0;
-  color: var(--text-primary);
-}
-
-.appDescription {
-  font-size: 12px;
-  line-height: 16px;
-  margin: 0;
-  color: var(--text-secondary);
-  flex: 1;
-}
-
-/* ============================================================================
-   Cards - Liquid Glass Containers
-   ============================================================================ */
-
-.card {
-  background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
-  padding: var(--space-md);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-  box-shadow: var(--shadow-liquid-glass);
-  transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--inset-highlight), var(--shadow-sm);
 }
 
-.card:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--border-strong);
-  box-shadow: var(--shadow-glass);
-}
-
-.emptyCard {
-  align-items: center;
-  text-align: center;
-  gap: var(--space-lg);
-  padding: var(--space-lg) var(--space-md);
-  border-style: dashed;
-  border-color: var(--border-strong);
-}
-
-.emptyIconWrap {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  flex: none;
-  border-radius: var(--radius-full);
-  color: var(--tint);
-  background: var(--tint-dimmed);
-  box-shadow: var(--tint-glow);
-  animation: pop-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.emptyIconWrap svg {
-  display: block;
-}
-
-/* .muted is a shared global helper, so it needs :global() to be referenced
-   from inside a module. */
-.emptyCard :global(.muted) {
-  max-width: 240px;
-  font-size: 12px;
-  line-height: 16px;
-  color: var(--text-secondary);
-}
-
-.cardHeadingRow {
+.listHeadingRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-sm);
+  padding: var(--space-xxs) var(--space-xxs) 0;
 }
 
-.cardTitle {
-  font-size: 13px;
-  line-height: 18px;
+.listTitle {
+  font-size: var(--text-md);
+  line-height: var(--leading-md);
   font-weight: 600;
+  letter-spacing: -0.01em;
   margin: 0;
   color: var(--text-primary);
 }
-
-/* ============================================================================
-   Connection List
-   ============================================================================ */
 
 .connectionList {
   list-style: none;
@@ -387,79 +460,46 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-sm);
 }
 
-.connectionRow {
-  background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  padding: 12px;
+.connectionCard {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  box-shadow: var(--shadow-sm);
-  transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--bg-inset);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  transition:
+    background 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.connectionRow:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--border-strong);
-  box-shadow: var(--shadow-glass);
+.connectionCard:hover {
+  background: var(--bg-inset-strong);
+  border-color: var(--border-default);
 }
 
-.connectionRowActive {
+/* Active card: tinted edge + left accent bar. */
+.connectionCardActive {
+  background:
+    linear-gradient(135deg, var(--tint-dimmed) 0%, transparent 60%),
+    var(--bg-inset);
   border-color: var(--tint-border);
-  background: var(--tint-dimmed);
-  box-shadow:
-    inset 3px 0 0 var(--tint),
-    0 0 0 1px var(--tint-border),
-    var(--tint-glow);
+  box-shadow: inset 2px 0 0 var(--tint);
 }
 
-/* Icon tile with status-based coloring */
 .connectionTop {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.connectionIcon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  flex: none;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-}
-
-.connectionIcon svg {
-  display: block;
-}
-
-.iconSuccess {
-  color: var(--success);
-  background: var(--success-bg);
-}
-
-.iconDanger {
-  color: var(--danger);
-  background: var(--danger-bg);
-}
-
-.iconNeutral {
-  color: var(--text-muted);
-  background: var(--bg-surface-elevated);
+  gap: var(--space-md);
 }
 
 .connectionMain {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   flex: 1;
   min-width: 0;
 }
@@ -467,53 +507,75 @@
 .connectionTitleRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: var(--space-sm);
+  min-width: 0;
 }
 
 .connectionHost {
-  font-size: 13px;
-  line-height: 18px;
+  font-size: var(--text-base);
+  line-height: var(--leading-base);
   font-weight: 600;
-  overflow-wrap: anywhere;
   color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.badgeRow {
+.connectionBadges {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.connectionMeta {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 14px;
+  color: var(--text-tertiary);
 }
 
 .connectionActions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  padding-top: 4px;
+  align-items: center;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+/* Primary action grows; secondary actions stay compact. */
+.connectionActions :global(.btn-primary) {
+  flex: 1;
+  min-width: 96px;
 }
 
 /* ============================================================================
-   Loading State
+   Loading + list states (shared with the Connections page)
    ============================================================================ */
 
 .loadingRow {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-sm);
+  padding: var(--space-md);
   color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 16px;
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
 }
 
 .spinner {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   flex: none;
   border-radius: 50%;
-  border: 2px solid var(--border-default);
+  border: 2px solid var(--bg-inset-strong);
   border-top-color: var(--tint);
   animation: spin 700ms linear infinite;
 }
+
+/* ============================================================================
+   Keyframes (module-local)
+   ============================================================================ */
 
 @keyframes spin {
   to {
@@ -535,10 +597,19 @@
 @keyframes pop-in {
   from {
     opacity: 0;
-    transform: scale(0.85);
+    transform: scale(0.97);
   }
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
   }
 }

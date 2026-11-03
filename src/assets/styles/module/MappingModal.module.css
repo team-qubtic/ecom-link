@@ -1,0 +1,187 @@
+/* ============================================================================
+   MappingModal - the first sync wizard (spec 003).
+   Labels above full width selects, tuned for the narrow plugin canvas.
+   Design tokens only.
+   ============================================================================ */
+
+.collectionField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+}
+
+.fieldLabel {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.mappingSelect {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  width: 100%;
+  cursor: pointer;
+  transition: border-color 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mappingSelect:focus-visible {
+  outline: 2px solid var(--tint);
+  outline-offset: 1px;
+}
+
+.mappingSelect:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.sectionHeadingRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.sectionHeading {
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+.reDetectNote {
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.groupTitle {
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+.mappingRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+}
+
+.mappingRowHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.mappingLabel {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.statusesBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.statusesHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.statusesGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.checkboxRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.checkboxRow input {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--tint);
+  cursor: pointer;
+}
+
+.capsBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.capsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+}
+
+.capField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+  min-width: 0;
+}
+
+.capLabel {
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.capInput {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  width: 100%;
+  transition: border-color 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.capInput:focus-visible {
+  outline: 2px solid var(--tint);
+  outline-offset: 1px;
+}

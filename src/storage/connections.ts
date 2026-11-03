@@ -15,9 +15,28 @@
  *   stored key values. Disconnecting removes them.
  */
 
-import { framer } from "../lib/framer"
 import { getProvider } from "../providers"
 import type { Credentials } from "../providers"
+import {
+  ConnectionValidationError,
+  assertCanEditCms,
+  ensureInternalCollection,
+  fieldBool,
+  fieldValue,
+  findInternalCollection,
+  loadFieldMaps,
+  toIdKeyed,
+  toNameKeyed,
+  type SdkCollectionLike,
+} from "./internal"
+
+// Re-exported for existing imports across views and tests; the single
+// definition now lives in ./internal so every storage module throws the
+// same error class.
+export {
+  ConnectionValidationError,
+  CMS_PERMISSION_MESSAGE,
+} from "./internal"
 
 // ============================================================================
 // Public Types
@@ -74,20 +93,6 @@ export interface SaveConnectionInput {
 export type UrlNormalizationResult =
   | { ok: true; url: string }
   | { ok: false; message: string }
-
-/**
- * Input validation failure carrying the exact form field to highlight.
- * The message is a full user-facing sentence.
- */
-export class ConnectionValidationError extends Error {
-  constructor(
-    message: string,
-    public readonly fieldName?: "storeUrl" | "consumerKey" | "consumerSecret"
-  ) {
-    super(message)
-    this.name = "ConnectionValidationError"
-  }
-}
 
 // ============================================================================
 // Pure Helpers (exported for tests)
@@ -187,52 +192,20 @@ export function hostFromUrl(storeUrl: string): string {
 // ============================================================================
 // Internal CMS Collection Access
 //
-// The exact request and response shapes of the CMS API are isolated in this
-// section (see docs/API-NOTES.md). If the SDK typings change, only these
-// helpers need adjusting.
+// The SDK boundary (class-shaped API subset, permission guard, find or
+// create of the "Ecom-Link Internal" collection, and field name to field
+// ID translation) lives in ./internal.ts and is shared with the other
+// plugin data modules. This file only keeps the connection field schema.
 // ============================================================================
 
-const INTERNAL_COLLECTION_NAME = "Ecom-Link Internal"
-
-interface CmsCollectionLike {
+/**
+ * An item of the internal collection with fieldData keyed by field name.
+ * Everything in this module addresses fields by name.
+ */
+interface ConnectionItem {
   id: string
-  name?: string
+  fieldData: Record<string, { type?: string; value?: unknown }>
 }
-
-interface CmsFieldLike {
-  id?: string
-  name?: string
-  type?: string
-}
-
-interface CmsItemLike {
-  id: string
-  fieldData?: Record<string, { type?: string; value?: unknown }>
-}
-
-/** The subset of the Framer CMS API this module depends on. */
-interface CmsApi {
-  getCollections(): Promise<CmsCollectionLike[]>
-  createCollection(data: { name: string }): Promise<CmsCollectionLike>
-  getFields?(collectionId: string): Promise<CmsFieldLike[]>
-  createField(
-    collectionId: string,
-    data: { name: string; type: string }
-  ): Promise<CmsFieldLike>
-  getItems(collectionId: string): Promise<CmsItemLike[]>
-  createItem(
-    collectionId: string,
-    data: { fieldData: Record<string, { type: string; value: unknown }> }
-  ): Promise<CmsItemLike>
-  updateItem(
-    collectionId: string,
-    itemId: string,
-    data: { fieldData: Record<string, { type: string; value: unknown }> }
-  ): Promise<CmsItemLike>
-  deleteItem(collectionId: string, itemId: string): Promise<void>
-}
-
-const cms = framer as unknown as CmsApi
 
 /** Schema of the internal collection. Names double as fieldData keys. */
 const INTERNAL_FIELDS: Array<{ name: string; type: string }> = [
@@ -248,69 +221,6 @@ const INTERNAL_FIELDS: Array<{ name: string; type: string }> = [
   { name: "is_active", type: "boolean" },
 ]
 
-/** Find the internal collection without creating anything (used by reads). */
-async function findInternalCollectionId(): Promise<string | null> {
-  const collections = await cms.getCollections()
-  if (!Array.isArray(collections)) {
-    // Out-of-contract response (e.g. the standalone browser preview stub):
-    // treat reads as "nothing saved yet" instead of crashing the view.
-    return null
-  }
-  const found = collections.find(function hasName(collection) {
-    return collection.name === INTERNAL_COLLECTION_NAME
-  })
-  return found ? found.id : null
-}
-
-/** Create any missing fields on an existing collection (self-repair). */
-async function ensureInternalFields(collectionId: string): Promise<void> {
-  if (typeof cms.getFields !== "function") {
-    return
-  }
-  const existing = await cms.getFields(collectionId)
-  const existingNames = new Set(
-    existing.map(function nameOf(field) {
-      return field.name
-    })
-  )
-  for (const field of INTERNAL_FIELDS) {
-    if (!existingNames.has(field.name)) {
-      await cms.createField(collectionId, {
-        name: field.name,
-        type: field.type,
-      })
-    }
-  }
-}
-
-/**
- * Find or create the internal collection and return its id. Creates the full
- * field schema on first creation so the first connection can be saved.
- */
-async function ensureInternalCollectionId(): Promise<string> {
-  const existingId = await findInternalCollectionId()
-  if (existingId) {
-    await ensureInternalFields(existingId)
-    return existingId
-  }
-  const created = await cms.createCollection({
-    name: INTERNAL_COLLECTION_NAME,
-  })
-  for (const field of INTERNAL_FIELDS) {
-    await cms.createField(created.id, { name: field.name, type: field.type })
-  }
-  return created.id
-}
-
-function fieldValue(item: CmsItemLike, fieldName: string): string {
-  const entry = item.fieldData?.[fieldName]
-  return typeof entry?.value === "string" ? entry.value : ""
-}
-
-function fieldBool(item: CmsItemLike, fieldName: string): boolean {
-  return item.fieldData?.[fieldName]?.value === true
-}
-
 function parseValidationState(value: string): ValidationState {
   return value === "valid" || value === "invalid" ? value : "unvalidated"
 }
@@ -319,7 +229,7 @@ function parseValidationState(value: string): ValidationState {
  * Convert a raw CMS item into the masked, view-facing record. This is the
  * only path from stored secrets to anything a component can see.
  */
-function toConnectionRecord(item: CmsItemLike): ConnectionRecord {
+function toConnectionRecord(item: ConnectionItem): ConnectionRecord {
   const storeUrl = fieldValue(item, "store_url")
   return {
     id: item.id,
@@ -337,15 +247,28 @@ function toConnectionRecord(item: CmsItemLike): ConnectionRecord {
   }
 }
 
-async function fetchItems(collectionId: string): Promise<CmsItemLike[]> {
-  return cms.getItems(collectionId)
+/**
+ * Load all items of the internal collection with fieldData keyed by field
+ * name.
+ */
+async function fetchItems(
+  collection: SdkCollectionLike
+): Promise<ConnectionItem[]> {
+  const maps = await loadFieldMaps(collection)
+  const items = await collection.getItems()
+  return items.map(function toNamedItem(item) {
+    return {
+      id: item.id,
+      fieldData: toNameKeyed(item.fieldData, maps.nameById),
+    }
+  })
 }
 
 async function findItemById(
-  collectionId: string,
+  collection: SdkCollectionLike,
   itemId: string
-): Promise<CmsItemLike | null> {
-  const items = await fetchItems(collectionId)
+): Promise<ConnectionItem | null> {
+  const items = await fetchItems(collection)
   return (
     items.find(function hasId(item) {
       return item.id === itemId
@@ -353,21 +276,81 @@ async function findItemById(
   )
 }
 
-/**
- * Wrap plain values into the typed fieldData shape the CMS API expects.
- * Types come from INTERNAL_FIELDS so they can never drift from the schema.
- */
-function toFieldData(
-  fields: Record<string, unknown>
-): Record<string, { type: string; value: unknown }> {
-  const result: Record<string, { type: string; value: unknown }> = {}
-  for (const [name, value] of Object.entries(fields)) {
-    const definition = INTERNAL_FIELDS.find(function named(field) {
-      return field.name === name
-    })
-    result[name] = { type: definition ? definition.type : "string", value }
+/** Look up one stored item by id without creating the collection. */
+async function findStoredItem(itemId: string): Promise<ConnectionItem | null> {
+  const collection = await findInternalCollection()
+  return collection ? findItemById(collection, itemId) : null
+}
+
+/** Unwrap a name-keyed item into plain values for merging on update. */
+function itemFieldValues(item: ConnectionItem): Record<string, unknown> {
+  const values: Record<string, unknown> = {}
+  for (const [name, entry] of Object.entries(item.fieldData)) {
+    values[name] = entry.value
   }
-  return result
+  return values
+}
+
+/**
+ * Append a new item carrying the given name-keyed values and return it. The
+ * slug combines the store host with a random suffix so slugs stay unique
+ * even when the same store is connected twice.
+ */
+async function createConnectionItem(
+  collection: SdkCollectionLike,
+  values: Record<string, unknown>
+): Promise<ConnectionItem> {
+  const maps = await loadFieldMaps(collection)
+  const hostSlug = String(values.name ?? "store")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+  const suffix = `${Date.now().toString(36)}${Math.random()
+    .toString(36)
+    .slice(2, 8)}`
+  const slug = `${hostSlug || "store"}-${suffix}`
+  assertCanEditCms("Collection.addItems")
+  await collection.addItems([
+    { slug, fieldData: toIdKeyed(values, maps.idByName, INTERNAL_FIELDS) },
+  ])
+  const items = await collection.getItems()
+  const created = items.find(function hasSlug(item) {
+    return item.slug === slug
+  })
+  if (!created) {
+    throw new ConnectionValidationError(MISSING_CONNECTION_MESSAGE)
+  }
+  return {
+    id: created.id,
+    fieldData: toNameKeyed(created.fieldData, maps.nameById),
+  }
+}
+
+/**
+ * Rewrite an existing item with the merged result of its current values and
+ * the given changes. The full field set is sent every time because the SDK
+ * gives no merge guarantee for item updates.
+ */
+async function updateConnectionItem(
+  collection: SdkCollectionLike,
+  itemId: string,
+  changes: Record<string, unknown>
+): Promise<ConnectionItem> {
+  const existing = await findItemById(collection, itemId)
+  if (!existing) {
+    throw new ConnectionValidationError(MISSING_CONNECTION_MESSAGE)
+  }
+  const maps = await loadFieldMaps(collection)
+  const merged = { ...itemFieldValues(existing), ...changes }
+  assertCanEditCms("Collection.addItems")
+  await collection.addItems([
+    { id: itemId, fieldData: toIdKeyed(merged, maps.idByName, INTERNAL_FIELDS) },
+  ])
+  const updated = await findItemById(collection, itemId)
+  if (!updated) {
+    throw new ConnectionValidationError(MISSING_CONNECTION_MESSAGE)
+  }
+  return updated
 }
 
 // ============================================================================
@@ -379,11 +362,11 @@ function toFieldData(
  * the internal collection does not exist yet (nothing has been saved).
  */
 export async function listConnections(): Promise<ConnectionRecord[]> {
-  const collectionId = await findInternalCollectionId()
-  if (!collectionId) {
+  const collection = await findInternalCollection()
+  if (!collection) {
     return []
   }
-  const items = await fetchItems(collectionId)
+  const items = await fetchItems(collection)
   return items.map(toConnectionRecord)
 }
 
@@ -404,8 +387,7 @@ export async function getActiveConnection(): Promise<ConnectionRecord | null> {
 export async function getFullCredentials(
   connectionId: string
 ): Promise<Credentials> {
-  const collectionId = await findInternalCollectionId()
-  const item = collectionId ? await findItemById(collectionId, connectionId) : null
+  const item = await findStoredItem(connectionId)
   if (!item) {
     throw new ConnectionValidationError(MISSING_CONNECTION_MESSAGE)
   }
@@ -430,13 +412,10 @@ export async function saveConnection(
   if (!normalized.ok) {
     throw new ConnectionValidationError(normalized.message, "storeUrl")
   }
-  const collectionId = await ensureInternalCollectionId()
   // Resolve secrets: new values when provided, stored values when editing.
+  const editingItem = input.id ? await findStoredItem(input.id) : null
   let consumerKey = (input.consumerKey ?? "").trim()
   let consumerSecret = (input.consumerSecret ?? "").trim()
-  const editingItem = input.id
-    ? await findItemById(collectionId, input.id)
-    : null
   if (editingItem) {
     if (consumerKey === "") {
       consumerKey = fieldValue(editingItem, "consumer_key")
@@ -459,39 +438,13 @@ export async function saveConnection(
     consumerSecret,
   }
   await getProvider(input.providerId).validateConnection(credentials)
+  // The collection is only created once the store has accepted the keys, so
+  // a failed attempt never leaves a half-initialized collection behind.
+  const collection = await ensureInternalCollection(INTERNAL_FIELDS)
   const nowIso = new Date().toISOString()
   const companionUrl = input.companionPluginUrl?.trim() ?? ""
   if (editingItem) {
-    await cms.updateItem(
-      collectionId,
-      editingItem.id,
-      toFieldData({
-        name: hostFromUrl(normalized.url),
-        provider_id: input.providerId,
-        store_url: normalized.url,
-        consumer_key: consumerKey,
-        consumer_secret: consumerSecret,
-        key_scope: input.keyScope,
-        companion_plugin_url: companionUrl,
-        validation_state: "valid",
-        last_validated_at: nowIso,
-        is_active: fieldBool(editingItem, "is_active"),
-      })
-    )
-    const updated = await findItemById(collectionId, editingItem.id)
-    if (!updated) {
-      throw new ConnectionValidationError(MISSING_CONNECTION_MESSAGE)
-    }
-    return toConnectionRecord(updated)
-  }
-  // New connection: active when no other connection is active yet.
-  const items = await fetchItems(collectionId)
-  const hasActive = items.some(function anyActive(item) {
-    return fieldBool(item, "is_active")
-  })
-  const created = await cms.createItem(
-    collectionId,
-    toFieldData({
+    const updated = await updateConnectionItem(collection, editingItem.id, {
       name: hostFromUrl(normalized.url),
       provider_id: input.providerId,
       store_url: normalized.url,
@@ -501,9 +454,27 @@ export async function saveConnection(
       companion_plugin_url: companionUrl,
       validation_state: "valid",
       last_validated_at: nowIso,
-      is_active: !hasActive,
+      is_active: fieldBool(editingItem, "is_active"),
     })
-  )
+    return toConnectionRecord(updated)
+  }
+  // New connection: active when no other connection is active yet.
+  const items = await fetchItems(collection)
+  const hasActive = items.some(function anyActive(item) {
+    return fieldBool(item, "is_active")
+  })
+  const created = await createConnectionItem(collection, {
+    name: hostFromUrl(normalized.url),
+    provider_id: input.providerId,
+    store_url: normalized.url,
+    consumer_key: consumerKey,
+    consumer_secret: consumerSecret,
+    key_scope: input.keyScope,
+    companion_plugin_url: companionUrl,
+    validation_state: "valid",
+    last_validated_at: nowIso,
+    is_active: !hasActive,
+  })
   return toConnectionRecord(created)
 }
 
@@ -515,11 +486,9 @@ export async function saveConnection(
 export async function revalidateConnection(
   connectionId: string
 ): Promise<ConnectionRecord> {
-  const collectionId = await findInternalCollectionId()
-  const item = collectionId
-    ? await findItemById(collectionId, connectionId)
-    : null
-  if (!item || !collectionId) {
+  const collection = await findInternalCollection()
+  const item = collection ? await findItemById(collection, connectionId) : null
+  if (!item || !collection) {
     throw new ConnectionValidationError(MISSING_CONNECTION_MESSAGE)
   }
   const credentials: Credentials = {
@@ -532,18 +501,18 @@ export async function revalidateConnection(
     await getProvider(fieldValue(item, "provider_id")).validateConnection(
       credentials
     )
-    await cms.updateItem(collectionId, item.id, toFieldData({
+    await updateConnectionItem(collection, item.id, {
       validation_state: "valid",
       last_validated_at: nowIso,
-    }))
+    })
   } catch (error) {
-    await cms.updateItem(collectionId, item.id, toFieldData({
+    await updateConnectionItem(collection, item.id, {
       validation_state: "invalid",
       last_validated_at: nowIso,
-    }))
+    })
     throw error
   }
-  const refreshed = await findItemById(collectionId, connectionId)
+  const refreshed = await findItemById(collection, connectionId)
   if (!refreshed) {
     throw new ConnectionValidationError(MISSING_CONNECTION_MESSAGE)
   }
@@ -558,11 +527,9 @@ export async function revalidateConnection(
 export async function checkConnectionWriteAccess(
   connectionId: string
 ): Promise<boolean> {
-  const collectionId = await findInternalCollectionId()
-  const item = collectionId
-    ? await findItemById(collectionId, connectionId)
-    : null
-  if (!item || !collectionId) {
+  const collection = await findInternalCollection()
+  const item = collection ? await findItemById(collection, connectionId) : null
+  if (!item || !collection) {
     return false
   }
   const provider = getProvider(fieldValue(item, "provider_id"))
@@ -581,17 +548,17 @@ export async function checkConnectionWriteAccess(
  * in the same pass so the invariant holds after any failure.
  */
 export async function setActiveConnection(connectionId: string): Promise<void> {
-  const collectionId = await findInternalCollectionId()
-  if (!collectionId) {
+  const collection = await findInternalCollection()
+  if (!collection) {
     return
   }
-  const items = await fetchItems(collectionId)
+  const items = await fetchItems(collection)
   for (const item of items) {
     const shouldBeActive = item.id === connectionId
     if (fieldBool(item, "is_active") !== shouldBeActive) {
-      await cms.updateItem(collectionId, item.id, toFieldData({
+      await updateConnectionItem(collection, item.id, {
         is_active: shouldBeActive,
-      }))
+      })
     }
   }
 }
@@ -604,11 +571,11 @@ export async function setActiveConnection(connectionId: string): Promise<void> {
  * and 004, which own those collections.
  */
 export async function deleteConnection(connectionId: string): Promise<void> {
-  const collectionId = await findInternalCollectionId()
-  if (!collectionId) {
+  const collection = await findInternalCollection()
+  if (!collection) {
     return
   }
-  const items = await fetchItems(collectionId)
+  const items = await fetchItems(collection)
   const target = items.find(function hasId(item) {
     return item.id === connectionId
   })
@@ -616,16 +583,17 @@ export async function deleteConnection(connectionId: string): Promise<void> {
     return
   }
   const wasActive = fieldBool(target, "is_active")
-  await cms.deleteItem(collectionId, connectionId)
+  assertCanEditCms("Collection.removeItems")
+  await collection.removeItems([connectionId])
   if (wasActive) {
     const remaining = items.filter(function notDeleted(item) {
       return item.id !== connectionId
     })
     const next = remaining[0]
     if (next) {
-      await cms.updateItem(collectionId, next.id, toFieldData({
+      await updateConnectionItem(collection, next.id, {
         is_active: true,
-      }))
+      })
     }
   }
 }

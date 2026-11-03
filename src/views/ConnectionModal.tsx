@@ -6,6 +6,10 @@
  * contract), then optionally probe write access when two-way sync is on.
  * Views never call the platform APIs directly; storage and the provider
  * contract do all of that.
+ *
+ * Upgrading a saved read connection to two-way (spec 004) requires fresh
+ * read and write keys: blank key fields are rejected so the stored read
+ * keys are never silently reused.
  */
 
 import { useState } from "react"
@@ -125,6 +129,17 @@ export function ConnectionModal({
         nextErrors.consumerSecret = "Enter the consumer secret from WooCommerce."
       }
     }
+    // Upgrading a saved read connection to two-way needs fresh keys: the
+    // stored ones can only read, and blank fields would silently reuse them.
+    if (connection && connection.keyScope === "read" && keyScope === "read_write") {
+      if (values.consumerKey.trim() === "") {
+        nextErrors.consumerKey = "Enter a consumer key with read and write permission."
+      }
+      if (values.consumerSecret.trim() === "") {
+        nextErrors.consumerSecret =
+          "Enter a consumer secret with read and write permission."
+      }
+    }
     if (nextErrors.storeUrl || nextErrors.consumerKey || nextErrors.consumerSecret) {
       setErrors(nextErrors)
       return
@@ -169,6 +184,11 @@ export function ConnectionModal({
   }
 
   const editing = connection !== null
+  const upgradingKeys =
+    editing &&
+    connection !== null &&
+    connection.keyScope === "read" &&
+    keyScope === "read_write"
   const savedMasks = connection
     ? {
         consumerKey: connection.consumerKeyMasked,
@@ -237,6 +257,17 @@ export function ConnectionModal({
           />
           <HelpTooltip text="Two-way sync sends your Framer edits back to the store. It needs keys with read and write permission, and every change is previewed before it is sent." />
         </div>
+        {upgradingKeys ? (
+          <div className="notice notice-warning" role="status">
+            <h3 className="notice-title">Read and Write Keys Needed</h3>
+            <p>
+              Your saved keys can only read the store. Create a key with read
+              and write permission in WooCommerce under Settings, Advanced,
+              REST API, then paste the new key and secret here. Saving replaces
+              the stored keys.
+            </p>
+          </div>
+        ) : null}
         {showCompanionField ? (
           <Field
             id="connection-companion-url"

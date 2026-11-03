@@ -1,0 +1,124 @@
+/* BottomNav: floating bottom navigation (Dribbble shot 16622918 style).
+   HARD CONSTRAINT: the plugin window is 350px wide. The bar is width-locked
+   (width: 100% at every level, flex items sized by ratios, min-width: 0) so
+   it can NEVER exceed the window, no matter how many items are in
+   navigation.json. The active item is a solid tinted pill with icon + label;
+   inactive items are icon-only ghost buttons. */
+
+.bottomNav {
+  position: relative;
+  z-index: 30;
+  flex: none;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  padding: var(--space-sm);
+  padding-bottom: max(var(--space-sm), env(safe-area-inset-bottom));
+  background: transparent;
+}
+
+.navBar {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  gap: var(--space-xs);
+  padding: var(--space-xs);
+  background: var(--bg-glass-nav);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  box-shadow: var(--shadow-glass);
+}
+
+/* Ratio-based flex sizing: every item takes a share of the bar, so the
+   total is always exactly the bar width — overflow is impossible. */
+.navItem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Icon-label gap matches the side padding so the active pill reads
+     evenly spaced. */
+  gap: var(--space-sm);
+  height: 38px;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0 var(--space-sm);
+  border: none;
+  border-radius: 16px;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  /* Gap starts at zero so a collapsed label leaves the icon centered, then
+     opens with the label reveal. */
+  gap: 0;
+  transition:
+    background 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.18s ease,
+    box-shadow 0.18s ease,
+    gap 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.navItem svg {
+  display: block;
+  flex: none;
+}
+
+.navItem:hover:not(.navItemActive) {
+  background: var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.navItem:active {
+  transform: scale(0.94);
+}
+
+/* Active item: gradient pill with icon + label, wider share of the bar.
+   The extra grow plus the tight 4px icon-label gap leaves room for the
+   widest label (Components) on one line. The label reveal above animates
+   the pill sideways. */
+.navItemActive {
+  /* Solve comfortably above the widest label (Components, about 116px);
+     the fit-content cap then hugs every label with equal padding. */
+  flex-grow: 3.4;
+  gap: 4px;
+  color: #ffffff;
+  background: var(--accent-gradient);
+  box-shadow: var(--shadow-btn-primary);
+  font-weight: 600;
+}
+
+.navItemActive:hover {
+  color: #ffffff;
+}
+
+/* The label is always in the DOM and expands horizontally from zero width,
+   so the pill grows sideways instead of popping. max-width is wide enough
+   for the longest label (Connections); the pill itself hugs content, so the
+   real width follows the natural text width. */
+.navItemLabel {
+  display: inline-block;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 0;
+  opacity: 0;
+  transition:
+    max-width 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.4s ease;
+}
+
+.navItemActive .navItemLabel {
+  max-width: 96px;
+  opacity: 1;
+}

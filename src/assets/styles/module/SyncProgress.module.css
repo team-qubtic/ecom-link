@@ -1,0 +1,62 @@
+/* ============================================================================
+   SyncProgress - live progress readout shown while the engine pulls pages.
+   Design tokens only. Layout follows the compact plugin canvas.
+   ============================================================================ */
+
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border: 2px solid var(--border-default);
+  border-top-color: var(--tint);
+  border-radius: 50%;
+  animation: sync-progress-spin 700ms linear infinite;
+}
+
+.statusText {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.countText {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.barTrack {
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: linear-gradient(90deg, var(--tint), var(--tint-active));
+  transition: width 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes sync-progress-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
