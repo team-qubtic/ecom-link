@@ -91,14 +91,14 @@
      the fit-content cap then hugs every label with equal padding. */
   flex-grow: 3.4;
   gap: 4px;
-  color: #ffffff;
+  color: var(--tint-contrast);
   background: var(--accent-gradient);
   box-shadow: var(--shadow-btn-primary);
   font-weight: 600;
 }
 
 .navItemActive:hover {
-  color: #ffffff;
+  color: var(--tint-contrast);
 }
 
 /* The label is always in the DOM and expands horizontally from zero width,

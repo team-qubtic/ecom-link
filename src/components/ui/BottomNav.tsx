@@ -41,19 +41,27 @@ export function BottomNav({ currentView, onNavigate }: BottomNavProps) {
             return null
           }
           return (
-            <button
-              key={item.id}
-              type="button"
-              className={active ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
-              onClick={function handleClick() {
-                onNavigate(item.id)
-              }}
-              aria-current={active ? "page" : undefined}
-              aria-label={active ? undefined : item.label}
-              title={item.label}
-            >
-              <Icon size={18} strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
-              {/* Always rendered so the label can slide open horizontally;
+						<button
+							key={item.id}
+							type="button"
+							className={
+								active
+									? `${styles.navItem} ${styles.navItemActive}`
+									: styles.navItem
+							}
+							onClick={function handleClick() {
+								onNavigate(item.id);
+							}}
+							aria-current={active ? "page" : undefined}
+							aria-label={active ? undefined : item.label}
+							title={item.label}
+						>
+							<Icon
+								size={14}
+								strokeWidth={active ? 2.2 : 1.8}
+								aria-hidden="true"
+							/>
+							{/* Always rendered so the label can slide open horizontally;
                   hidden from assistive tech when the icon-only state already
                   carries the name via aria-label. */}
               <span

@@ -4,7 +4,8 @@
    Discipline rules that keep the UI modern instead of murky:
    1. Glass (translucency + blur) is reserved for chrome: page header, bottom
       nav, and modals. Content cards are near-solid with hairline borders.
-   2. One accent (indigo → violet) carries brand moments and primary actions.
+   2. One accent (Warm Sand dark / Forest Green light) carries brand moments
+      and primary actions.
       Status colors only appear on status chips and notices, never decoratively.
    3. Legacy token names (--bg-card, --tint-glow, …) are kept as aliases so
       every CSS module keeps working; they map onto the new surface model.
@@ -14,15 +15,17 @@
 [data-theme="dark"],
 [data-framer-theme="dark"] {
   /* Accent & Brand: indigo core, violet gradient endpoint. */
-  --tint: #6366f1;
-  --tint-hover: #7a7ef6;
-  --tint-active: #5558e8;
-  --tint-2: #8b5cf6;
-  --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  --tint-dimmed: rgba(99, 102, 241, 0.14);
-  --tint-border: rgba(129, 140, 248, 0.42);
-  --tint-glow: 0 1px 2px rgba(79, 70, 229, 0.4), 0 4px 14px -4px rgba(99, 102, 241, 0.55);
-  --ring: 0 0 0 3px rgba(99, 102, 241, 0.22);
+  --tint: #f6deaf;
+  --tint-hover: #fae8c6;
+  --tint-active: #e9cb92;
+  --tint-2: #e2c186;
+  --accent-gradient: linear-gradient(135deg, #f6deaf 0%, #e2c186 100%);
+  --tint-dimmed: rgba(246, 222, 175, 0.14);
+  --tint-border: rgba(246, 222, 175, 0.4);
+  --tint-glow: 0 1px 2px rgba(246, 222, 175, 0.28), 0 4px 14px -4px rgba(246, 222, 175, 0.35);
+  --ring: 0 0 0 3px rgba(246, 222, 175, 0.28);
+  /* Text color on top of accent fills (sand needs dark text). */
+  --tint-contrast: #080a0e;
 
   /* Semantic Status (bright steps read well on near-black). */
   --success: #34d399;
@@ -61,9 +64,10 @@
 
   /* Ambient background: one aurora, top-anchored, barely there. */
   --bg-mesh:
-    radial-gradient(ellipse 120% 55% at 50% -12%, rgba(99, 102, 241, 0.14) 0%, transparent 60%),
-    radial-gradient(ellipse 70% 45% at 100% -5%, rgba(139, 92, 246, 0.09) 0%, transparent 55%),
-    radial-gradient(ellipse 80% 40% at 0% -5%, rgba(56, 189, 248, 0.05) 0%, transparent 50%);
+    radial-gradient(ellipse 120% 55% at 50% -12%, rgba(246, 222, 175, 0.1) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 45% at 100% -5%, rgba(246, 222, 175, 0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 40% at 0% -5%, rgba(148, 163, 184, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 90% 60% at 100% 100%, rgba(246, 222, 175, 0.05) 0%, transparent 55%);
 
   /* Glass chrome treatment. */
   --liquid-glass-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.015) 100%);
@@ -123,15 +127,18 @@
 [data-theme="light"],
 [data-framer-theme="light"] {
   /* Accent & Brand: deeper indigo for contrast on white. */
-  --tint: #4f46e5;
-  --tint-hover: #6366f1;
-  --tint-active: #4438c9;
-  --tint-2: #7c3aed;
-  --accent-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  --tint-dimmed: rgba(79, 70, 229, 0.09);
-  --tint-border: rgba(79, 70, 229, 0.32);
-  --tint-glow: 0 1px 2px rgba(67, 56, 202, 0.25), 0 3px 10px -3px rgba(79, 70, 229, 0.4);
-  --ring: 0 0 0 3px rgba(79, 70, 229, 0.16);
+  --tint: #13382c;
+  --tint-hover: #1e4d3d;
+  --tint-active: #0d2b21;
+  --tint-2: #0f4434;
+  /* Wider tonal range so the gradient is visible on the dark green. */
+  --accent-gradient: linear-gradient(135deg, #215b47 0%, #0d2b21 100%);
+  --tint-dimmed: #e6f0ea;
+  --tint-border: #bcd5c6;
+  --tint-glow: 0 1px 2px rgba(19, 56, 44, 0.28), 0 4px 14px -4px rgba(19, 56, 44, 0.35);
+  --ring: 0 0 0 3px rgba(19, 56, 44, 0.16);
+  /* Text color on top of accent fills (forest keeps white text). */
+  --tint-contrast: #ffffff;
 
   /* Semantic Status. */
   --success: #059669;
@@ -170,9 +177,10 @@
 
   /* Ambient background: soft indigo aurora at the top, mirroring dark. */
   --bg-mesh:
-    radial-gradient(ellipse 120% 55% at 50% -12%, rgba(79, 70, 229, 0.11) 0%, transparent 60%),
-    radial-gradient(ellipse 70% 45% at 100% -5%, rgba(124, 58, 237, 0.08) 0%, transparent 55%),
-    radial-gradient(ellipse 80% 40% at 0% -5%, rgba(56, 189, 248, 0.05) 0%, transparent 50%);
+    radial-gradient(ellipse 120% 55% at 50% -12%, rgba(19, 56, 44, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 45% at 100% -5%, rgba(19, 56, 44, 0.05) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 40% at 0% -5%, rgba(19, 56, 44, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse 90% 60% at 100% 100%, rgba(19, 56, 44, 0.04) 0%, transparent 55%);
 
   /* Glass chrome treatment. */
   --liquid-glass-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.82) 100%);

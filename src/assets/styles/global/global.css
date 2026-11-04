@@ -187,9 +187,8 @@ body::before {
 /* Primary: the one gradient surface in the product; reserved for the
    main action on a screen. */
 .btn-primary {
-  color: #ffffff;
+  color: var(--tint-contrast);
   background: var(--accent-gradient);
-  box-shadow: var(--shadow-btn-primary);
 }
 
 .btn-primary:not(:disabled):hover {

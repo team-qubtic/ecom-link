@@ -124,7 +124,7 @@
 
 .drawerLink:hover .drawerLinkIcon{
   background: var(--tint);
-  color: #ffffff;
+  color: var(--tint-contrast);
 }
 
 /* Active row: tinted tile and label, matching the page accent. */
@@ -137,7 +137,7 @@
 .drawerLinkActive.drawerLinkIcon,
 .drawerLinkActive:hover .drawerLinkIcon{
   background: var(--tint);
-  color: #ffffff;
+  color: var(--tint-contrast);
 }
 
 .drawerLinkActive.drawerLinkChevron,
@@ -241,5 +241,5 @@
      icon inverting to white. */
   background: var(--accent-gradient);
   border-color: transparent;
-  color: #ffffff;
+  color: var(--tint-contrast);
 }
