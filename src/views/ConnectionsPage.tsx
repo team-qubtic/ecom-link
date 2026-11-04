@@ -472,7 +472,7 @@ export function ConnectionsPage({ dataVersion, onConnect, onEdit, onOpenMenu, on
   }
 
   return (
-    <main className={pageStyles.page}>
+    <>
       <header className={pageStyles.pageHeader}>
         <div className={pageStyles.headerBrand}>
           <MenuButton onOpen={onOpenMenu} />
@@ -489,7 +489,8 @@ export function ConnectionsPage({ dataVersion, onConnect, onEdit, onOpenMenu, on
         </div>
       </header>
 
-      <div className={pageStyles.pageContent}>
+      <main className={pageStyles.page}>
+        <div className={pageStyles.pageContent}>
         {!canEditCms ? (
           <div className="notice notice-error" role="alert">
             <h3 className="notice-title">CMS Editing Blocked</h3>
@@ -626,6 +627,7 @@ export function ConnectionsPage({ dataVersion, onConnect, onEdit, onOpenMenu, on
           />
         ) : null}
       </div>
-    </main>
+      </main>
+    </>
   )
 }

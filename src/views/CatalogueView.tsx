@@ -96,7 +96,7 @@ export function CatalogueView({
   )
 
   return (
-    <main className={pageStyles.page}>
+    <>
       <header className={pageStyles.pageHeader}>
         <div className={pageStyles.headerBrand}>
           <MenuButton onOpen={onOpenMenu} />
@@ -113,7 +113,8 @@ export function CatalogueView({
         </div>
       </header>
 
-      <div className={pageStyles.pageContent}>
+      <main className={pageStyles.page}>
+        <div className={pageStyles.pageContent}>
         {state.status === "loading" ? (
           <div className={pageStyles.loadingRow}>
             <span className={pageStyles.spinner} aria-hidden="true" />
@@ -234,6 +235,7 @@ export function CatalogueView({
           </section>
         ) : null}
       </div>
-    </main>
+      </main>
+    </>
   )
 }

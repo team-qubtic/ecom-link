@@ -61,7 +61,7 @@ export function AccountPage({ onBack }: AccountPageProps) {
   }
 
   return (
-    <main className={pageStyles.page}>
+    <>
       <header className={pageStyles.pageHeader}>
         <div className={pageStyles.headerBrand}>
           <button
@@ -81,7 +81,8 @@ export function AccountPage({ onBack }: AccountPageProps) {
         </div>
       </header>
 
-      <div className={pageStyles.pageContent}>
+      <main className={pageStyles.page}>
+        <div className={pageStyles.pageContent}>
         {/* Profile hero: avatar, plan badge, identity. */}
         <section className={accountStyles.heroCard}>
           <div className={accountStyles.avatarWrap}>
@@ -182,6 +183,7 @@ export function AccountPage({ onBack }: AccountPageProps) {
           Ecom-Link · More apps from Qubtic are on the way.
         </footer>
       </div>
-    </main>
+      </main>
+    </>
   )
 }

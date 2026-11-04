@@ -384,6 +384,9 @@ body::before {
    Scrollbar Styling
    ============================================================================ */
 
+/* Scrollbar: always visible; it sits beside the content region (the app
+   header is a separate bar), so it never caps anything. Hovering or
+   dragging the thumb strengthens it. */
 ::-webkit-scrollbar {
   width: 9px;
   height: 9px;
@@ -400,7 +403,8 @@ body::before {
   background-clip: padding-box;
 }
 
-::-webkit-scrollbar-thumb:hover {
+::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:active {
   background: var(--border-strong);
   border: 2px solid transparent;
   background-clip: padding-box;

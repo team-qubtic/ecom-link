@@ -76,7 +76,7 @@ export function ComponentsView({
   onOpenAccount,
 }: ComponentsViewProps) {
   return (
-    <main className={pageStyles.page}>
+    <>
       <header className={pageStyles.pageHeader}>
         <div className={pageStyles.headerBrand}>
           <MenuButton onOpen={onOpenMenu} />
@@ -93,7 +93,8 @@ export function ComponentsView({
         </div>
       </header>
 
-      <div className={pageStyles.pageContent}>
+      <main className={pageStyles.page}>
+        <div className={pageStyles.pageContent}>
         {/* Status notice: the library ships after the sync engine. */}
         <section className={`${pageStyles.heroCard} ${pageStyles.heroCardEmpty}`}>
           <span className={pageStyles.heroIconWrap} aria-hidden="true">
@@ -132,7 +133,7 @@ export function ComponentsView({
                   </div>
                   <span className="badge badge-neutral">
                     <ArrowUpRight size={11} aria-hidden="true" />
-                    Soon
+                    Available Soon
                   </span>
                 </div>
               )
@@ -144,6 +145,7 @@ export function ComponentsView({
           Ecom-Link · More apps from Qubtic are on the way.
         </footer>
       </div>
-    </main>
+      </main>
+    </>
   )
 }

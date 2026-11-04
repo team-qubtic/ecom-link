@@ -134,7 +134,7 @@ export function Dashboard({ onConnect, onViewConnections, onOpenMenu, onOpenAcco
   )
 
   return (
-    <main className={pageStyles.page}>
+    <>
       <header className={pageStyles.pageHeader}>
         <div className={pageStyles.headerBrand}>
           <MenuButton onOpen={onOpenMenu} />
@@ -151,7 +151,8 @@ export function Dashboard({ onConnect, onViewConnections, onOpenMenu, onOpenAcco
         </div>
       </header>
 
-      <div className={pageStyles.pageContent}>
+      <main className={pageStyles.page}>
+        <div className={pageStyles.pageContent}>
         {/* Section 1: active store status */}
         {loading ? (
           <div className={`${pageStyles.heroCard} ${pageStyles.heroCardLoading}`} aria-hidden="true">
@@ -311,6 +312,7 @@ export function Dashboard({ onConnect, onViewConnections, onOpenMenu, onOpenAcco
           Ecom-Link · More apps from Qubtic are on the way.
         </footer>
       </div>
-    </main>
+      </main>
+    </>
   )
 }

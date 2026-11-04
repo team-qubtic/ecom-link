@@ -27,7 +27,7 @@ export function SettingsView({ onOpenMenu, onOpenAccount }: SettingsViewProps) {
   const canEditCms = useCanEditCms()
 
   return (
-    <main className={pageStyles.page}>
+    <>
       <header className={pageStyles.pageHeader}>
         <div className={pageStyles.headerBrand}>
           <MenuButton onOpen={onOpenMenu} />
@@ -44,7 +44,8 @@ export function SettingsView({ onOpenMenu, onOpenAccount }: SettingsViewProps) {
         </div>
       </header>
 
-      <div className={pageStyles.pageContent}>
+      <main className={pageStyles.page}>
+        <div className={pageStyles.pageContent}>
         {/* Section 0: account entry */}
         <section className={pageStyles.section}>
           <h2 className={pageStyles.sectionTitle}>Account</h2>
@@ -164,6 +165,7 @@ export function SettingsView({ onOpenMenu, onOpenAccount }: SettingsViewProps) {
           Ecom-Link · More apps from Qubtic are on the way.
         </footer>
       </div>
-    </main>
+      </main>
+    </>
   )
 }
