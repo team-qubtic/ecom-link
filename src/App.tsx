@@ -3,8 +3,10 @@
  * connection forms (architecture: App owns page router state).
  */
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { framer } from "./lib/framer"
+import { runPull } from "./sync/engine"
+import { LoaderCircle } from "lucide-react"
 import "./App.css"
 import { Dashboard } from "./views/Dashboard"
 import { CatalogueView } from "./views/CatalogueView"
@@ -15,6 +17,19 @@ import { ConnectionPage } from "./views/ConnectionPage"
 import { BottomNav } from "./components/ui/BottomNav"
 import { NavDrawer } from "./components/ui/NavDrawer"
 import type { ConnectionRecord } from "./storage/connections"
+import {
+  DEFAULT_APP_SETTINGS,
+  getAppSyncSettings,
+  parseSyncFrequencyMs,
+  saveAppSyncSettings,
+  type AppSyncSettings,
+} from "./storage/appSettings"
+import { getActiveConnection } from "./storage/connections"
+import {
+  deleteSyncSettings,
+  getSyncSettings,
+  targetCollectionExists,
+} from "./storage/settings"
 import { AccountPage } from "./views/AccountPage"
 
 /** Current page view. */
@@ -74,6 +89,115 @@ export function App() {
   )
   const [dataVersion, setDataVersion] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
+  // Global sync automation preferences (auto sync toggle + frequency).
+  const [appSettings, setAppSettings] = useState<AppSyncSettings>(
+    DEFAULT_APP_SETTINGS
+  )
+  const [appSettingsLoaded, setAppSettingsLoaded] = useState(false)
+  /** "syncing" while the automatic headless run is in flight. */
+  const [autoSyncStatus, setAutoSyncStatus] = useState<"idle" | "syncing">(
+    "idle"
+  )
+  const autoSyncBusyRef = useRef(false)
+
+  useEffect(
+    function loadAppSettings() {
+      void getAppSyncSettings().then(function loaded(settings) {
+        setAppSettings(settings)
+        setAppSettingsLoaded(true)
+      })
+    },
+    []
+  )
+
+  useEffect(
+    function persistAppSettings() {
+      if (!appSettingsLoaded) return
+      void saveAppSyncSettings(appSettings).catch(function ignore() {
+        // Keep the in-memory values when the write fails; retried on the
+        // next change.
+      })
+    },
+    [appSettings, appSettingsLoaded]
+  )
+
+  function handleAppSettingsChange(next: AppSyncSettings) {
+    setAppSettings(next)
+  }
+
+  // ── Auto-sync engine (headless) ────────────────────────────────────────
+  // Lives at the app level so it runs on every page. Runs the active
+  // connection's pull directly through the engine: no modals, no write-back
+  // (that stays a reviewed, manual action). A small pill in the corner
+  // shows that a run is in flight. A single self-rescheduling timer drives
+  // the cadence, so timers can never stack up.
+  useEffect(
+    function runAutoSyncLoop() {
+      // No runsInsideFramer guard: with no stores connected the tick is a
+      // harmless no-op, and this keeps auto-sync observable in the preview.
+      if (!appSettings.autoSync) {
+        return
+      }
+      let cancelled = false
+      let timer: number | undefined
+
+      async function runTick() {
+        document.documentElement.dataset.autosyncTick = new Date().toISOString();
+        if (cancelled || autoSyncBusyRef.current) return
+        autoSyncBusyRef.current = true
+        setAutoSyncStatus("syncing")
+        try {
+          const active = await getActiveConnection()
+          if (!active) return
+          const settings = await getSyncSettings(active.id)
+          // Never mapped: the merchant starts the first sync manually, so
+          // the wizard can collect the collection and mapping.
+          if (!settings) return
+          const exists = await targetCollectionExists(
+            settings.targetCollectionId
+          )
+          if (!exists) {
+            // Silently drop stale settings; the next manual sync reopens
+            // the wizard with an explanation.
+            await deleteSyncSettings(active.id)
+            return
+          }
+          await runPull(active, settings, {})
+        } catch {
+          // Run failures are recorded in history and shown on the
+          // Connections page; the next tick retries.
+        } finally {
+          setAutoSyncStatus("idle")
+          setAppSettings(function stamp(current) {
+            return { ...current, lastAutoSyncAt: new Date().toISOString() }
+          })
+        }
+      }
+
+      function scheduleNext() {
+        document.documentElement.dataset.autosyncSchedule = new Date().toISOString();
+        if (cancelled) return
+        timer = window.setTimeout(function fire() {
+          void runTick().finally(scheduleNext)
+        }, parseSyncFrequencyMs(appSettings.syncFrequency))
+      }
+
+      // First run right away, then every interval.
+      timer = window.setTimeout(function fire() {
+        void runTick().finally(scheduleNext)
+      }, 2_000)
+
+      return function cleanup() {
+        cancelled = true
+        if (timer !== undefined) {
+          window.clearTimeout(timer)
+        }
+      }
+    },
+    // Only the toggle and frequency restart the cycle; the stamp updates
+    // never do, so the cadence stays stable.
+    [appSettings.autoSync, appSettings.syncFrequency]
+  )
   // The account page is reachable from any page via the drawer; remember
   // where it was opened from so its back button returns there.
   const [accountReturnView, setAccountReturnView] = useState("dashboard")
@@ -217,6 +341,8 @@ export function App() {
           setMenuOpen(true)
         }}
         onOpenAccount={handleOpenAccount}
+        appSettings={appSettings}
+        onAppSettingsChange={handleAppSettingsChange}
       />
     )
   } else {
@@ -238,6 +364,13 @@ export function App() {
     <div className="app-shell">
       <main className="app-shell-content">{content}</main>
       {nav}
+      {autoSyncStatus === "syncing" ? (
+        <div className="auto-sync-pill" role="status">
+          <LoaderCircle size={13} className="auto-sync-spin" aria-hidden="true" />
+          Syncing…
+        </div>
+      ) : null}
+
       <NavDrawer
         open={menuOpen}
         onClose={function closeMenu() {

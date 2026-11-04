@@ -12,6 +12,11 @@ import { MenuButton } from "../components/ui/MenuButton"
 import { HelpTooltip } from "../components/ui/HelpTooltip"
 import { AccountButton } from "../components/ui/AccountButton"
 import { useCanEditCms } from "../lib/permissions"
+import { Switch } from "../components/ui/Switch"
+import {
+  SYNC_FREQUENCIES,
+  type AppSyncSettings,
+} from "../storage/appSettings"
 import { version } from "../../package.json"
 
 interface SettingsViewProps {
@@ -19,10 +24,19 @@ interface SettingsViewProps {
   onOpenMenu: () => void
   /** Opens the account page (header action and Account row). */
   onOpenAccount: () => void
+  /** Global sync automation preferences. */
+  appSettings: AppSyncSettings
+  /** Applies changed automation preferences (and persists them). */
+  onAppSettingsChange: (next: AppSyncSettings) => void
 }
 
 /** Render the settings page. */
-export function SettingsView({ onOpenMenu, onOpenAccount }: SettingsViewProps) {
+export function SettingsView({
+  onOpenMenu,
+  onOpenAccount,
+  appSettings,
+  onAppSettingsChange,
+}: SettingsViewProps) {
   // Reactive CMS permission: mirrors what the sync and save flows enforce.
   const canEditCms = useCanEditCms()
 
@@ -46,7 +60,55 @@ export function SettingsView({ onOpenMenu, onOpenAccount }: SettingsViewProps) {
 
       <main className={pageStyles.page}>
         <div className={pageStyles.pageContent}>
-        {/* Section 0: account entry */}
+        {/* Section 0: sync automation */}
+        <section className={pageStyles.section}>
+          <h2 className={pageStyles.sectionTitle}>Sync automation</h2>
+          <div className={settingsStyles.settingsCard}>
+            <div className={settingsStyles.settingRow}>
+              <span className={pageStyles.capabilityTitle}>Auto sync</span>
+              <Switch
+                checked={appSettings.autoSync}
+                onChange={function toggleAutoSync(next: boolean) {
+                  onAppSettingsChange({ ...appSettings, autoSync: next })
+                }}
+                ariaLabel="Automatic sync"
+              />
+            </div>
+            <div className={settingsStyles.settingRow}>
+              <span className={pageStyles.capabilityTitle}>Sync frequency</span>
+              <select
+                className={settingsStyles.frequencySelect}
+                value={appSettings.syncFrequency}
+                onChange={function changeFrequency(event: React.ChangeEvent<HTMLSelectElement>) {
+                  onAppSettingsChange({
+                    ...appSettings,
+                    syncFrequency: event.target
+                      .value as AppSyncSettings["syncFrequency"],
+                  })
+                }}
+                disabled={!appSettings.autoSync}
+              >
+                {SYNC_FREQUENCIES.map(function renderOption(frequency) {
+                  return (
+                    <option key={frequency} value={frequency}>
+                      Every {frequency}
+                    </option>
+                  )
+                })}
+              </select>
+            </div>
+            <div className={settingsStyles.settingRow}>
+              <span className={pageStyles.capabilityTitle}>Last auto-sync</span>
+              <span className="muted small">
+                {appSettings.lastAutoSyncAt
+                  ? new Date(appSettings.lastAutoSyncAt).toLocaleString()
+                  : "Not yet"}
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* Section 1: account access */}
         <section className={pageStyles.section}>
           <h2 className={pageStyles.sectionTitle}>Account</h2>
           <button

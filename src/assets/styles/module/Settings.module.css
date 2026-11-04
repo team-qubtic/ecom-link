@@ -110,3 +110,50 @@
   color: var(--tint);
   background: var(--tint-dimmed);
 }
+
+/* Sync automation card: toggle and frequency rows on the shared card. */
+.settingsCard {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-xs) var(--space-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--inset-highlight), var(--shadow-xs);
+}
+
+.settingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0;
+  min-height: 32px;
+}
+
+.settingRow + .settingRow {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.frequencySelect {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 550;
+  color: var(--text-primary);
+  background: var(--bg-inset);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  height: 28px;
+  padding: 0 24px 0 10px;
+  cursor: pointer;
+}
+
+.frequencySelect:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.frequencySelect:focus-visible {
+  outline: 2px solid var(--tint);
+  outline-offset: 1px;
+}
