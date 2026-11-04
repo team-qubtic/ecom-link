@@ -71,6 +71,9 @@ body::before {
   min-height: 0;
   display: flex;
   flex-direction: column;
+  /* Positioning context for full-page overlays (the sync wizard) so they
+     fill the window above the bottom nav without covering it. */
+  position: relative;
 }
 
 /* ============================================================================

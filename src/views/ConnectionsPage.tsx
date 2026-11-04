@@ -37,7 +37,11 @@ import { collectPendingChanges, runPull, runPush } from "../sync/engine"
 import type { SyncProgress as SyncProgressSnapshot, WriteBackCheck } from "../sync/engine"
 import type { PendingChange } from "../sync/conflict"
 import type { SyncReport } from "../sync/report"
-import { getSyncSettings } from "../storage/settings"
+import {
+  deleteSyncSettings,
+  getSyncSettings,
+  targetCollectionExists,
+} from "../storage/settings"
 import type { SyncSettings } from "../storage/settings"
 import { MappingModal } from "./MappingModal"
 import { SyncReportModal } from "./SyncReportModal"
@@ -86,7 +90,12 @@ function formatLastChecked(iso: string): string {
  * flow: the mapping wizard, the live progress modal, and the report after. */
 type SyncPhase =
   | { kind: "idle" }
-  | { kind: "mapping"; connection: ConnectionRecord }
+  | {
+      kind: "mapping"
+      connection: ConnectionRecord
+      /** True when reopened because the saved collection was deleted. */
+      reopened?: boolean
+    }
   | {
       kind: "running"
       connection: ConnectionRecord
@@ -121,6 +130,7 @@ export function ConnectionsPage({ dataVersion, onConnect, onEdit, onOpenMenu, on
     useState<ConnectionRecord | null>(null)
   const [syncPhase, setSyncPhase] = useState<SyncPhase>({ kind: "idle" })
   const [syncReady, setSyncReady] = useState<Record<string, boolean>>({})
+  const [syncTargetNames, setSyncTargetNames] = useState<Record<string, string>>({})
   const abortSignalRef = useRef<{ aborted: boolean } | null>(null)
 
   /** Reactive CMS permission check: false when the account cannot edit CMS
@@ -134,10 +144,16 @@ export function ConnectionsPage({ dataVersion, onConnect, onEdit, onOpenMenu, on
       const loaded = await listConnections()
       setConnections(loaded)
       const ready: Record<string, boolean> = {}
+      const names: Record<string, string> = {}
       for (const connection of loaded) {
-        ready[connection.id] = (await getSyncSettings(connection.id)) !== null
+        const settings = await getSyncSettings(connection.id)
+        ready[connection.id] = settings !== null
+        if (settings?.targetCollectionName) {
+          names[connection.id] = settings.targetCollectionName
+        }
       }
       setSyncReady(ready)
+      setSyncTargetNames(names)
     } catch {
       setLoadError(
         "Connections could not be loaded. Close and reopen the plugin, then try again."
@@ -293,6 +309,16 @@ export function ConnectionsPage({ dataVersion, onConnect, onEdit, onOpenMenu, on
       setSyncPhase({ kind: "mapping", connection })
       return
     }
+    // A collection deleted in Framer leaves the saved settings stale:
+    // clear them and reopen the wizard so a new collection can be picked.
+    const collectionExists = await targetCollectionExists(
+      settings.targetCollectionId
+    )
+    if (!collectionExists) {
+      await deleteSyncSettings(connection.id)
+      setSyncPhase({ kind: "mapping", connection, reopened: true })
+      return
+    }
     beginSync(connection, settings)
   }
 
@@ -402,6 +428,9 @@ export function ConnectionsPage({ dataVersion, onConnect, onEdit, onOpenMenu, on
           </div>
         </div>
         <p className={pageStyles.connectionMeta}>
+          {syncTargetNames[connection.id]
+            ? `Syncs into ${syncTargetNames[connection.id]}.`
+            : ""}{" "}
           {connection.lastValidatedAt
             ? formatLastChecked(connection.lastValidatedAt)
             : "Not checked yet."}
@@ -587,6 +616,11 @@ export function ConnectionsPage({ dataVersion, onConnect, onEdit, onOpenMenu, on
         {syncPhase.kind === "mapping" ? (
           <MappingModal
             connection={syncPhase.connection}
+            notice={
+              syncPhase.reopened
+                ? "The previous sync collection no longer exists. Pick a new one below."
+                : undefined
+            }
             onStart={function handleMappingStart(settings: SyncSettings) {
               if (syncPhase.kind !== "mapping") {
                 return

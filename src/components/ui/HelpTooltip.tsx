@@ -10,6 +10,7 @@
  */
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import { CircleHelp } from "lucide-react"
 
 import helpTooltipStyles from "../../assets/styles/module/HelpTooltip.module.css"
@@ -52,17 +53,18 @@ export function HelpTooltip({ text, label = "More information" }: HelpTooltipPro
   // transforms or backdrop filters cannot skew the placement.
   useLayoutEffect(function placeBubble() {
     if (!open) return
-    const tooltip = tooltipRef.current
     const button = buttonRef.current
     const bubble = bubbleRef.current
-    if (!tooltip || !button || !bubble) return
+    if (!button || !bubble) return
 
-    const tooltipRect = tooltip.getBoundingClientRect()
     const buttonRect = button.getBoundingClientRect()
     const width = bubble.offsetWidth
     const height = bubble.offsetHeight
     const viewWidth = document.documentElement.clientWidth
     const viewHeight = document.documentElement.clientHeight
+    // Room kept clear at the bottom for the sticky footer and bottom nav,
+    // so the bubble never slides under them.
+    const bottomChrome = 72
 
     const left = clamp(
       buttonRect.left + buttonRect.width / 2 - width / 2,
@@ -70,12 +72,16 @@ export function HelpTooltip({ text, label = "More information" }: HelpTooltipPro
       Math.max(8, viewWidth - width - 8)
     )
     const belowTop = buttonRect.bottom + 8
-    const top =
-      belowTop + height > viewHeight - 8
-        ? buttonRect.top - height - 8
-        : belowTop
+    const aboveTop = buttonRect.top - height - 8
+    const belowFits = belowTop + height <= viewHeight - bottomChrome
+    const aboveFits = aboveTop >= 8
+    let top = belowTop
+    if (!belowFits && aboveFits) {
+      top = aboveTop
+    }
+    top = clamp(top, 8, Math.max(8, viewHeight - height - 8))
 
-    setPos({ left: left - tooltipRect.left, top: top - tooltipRect.top })
+    setPos({ left, top })
   }, [open])
 
   // The bubble does not follow scrolling content, so close it when the form
@@ -108,16 +114,23 @@ export function HelpTooltip({ text, label = "More information" }: HelpTooltipPro
       >
         <CircleHelp size={14} aria-hidden="true" />
       </button>
-      {open ? (
-        <span
-          ref={bubbleRef}
-          className={helpTooltipStyles.helpTooltipBubble}
-          role="tooltip"
-          style={pos ?? { visibility: "hidden" }}
-        >
-          {text}
-        </span>
-      ) : null}
+      {open
+        ? createPortal(
+            <span
+              ref={bubbleRef}
+              className={helpTooltipStyles.helpTooltipBubble}
+              role="tooltip"
+              style={
+                pos
+                  ? { left: pos.left, top: pos.top }
+                  : { visibility: "hidden" }
+              }
+            >
+              {text}
+            </span>,
+            document.body
+          )
+        : null}
     </span>
   )
 }

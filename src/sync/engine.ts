@@ -88,7 +88,6 @@ const RATE_LIMIT_MESSAGE =
   "The store is rate limiting requests. Wait a moment, then retry."
 const UNREACHABLE_MESSAGE =
   "The store could not be reached. Check the connection and try again."
-const IMAGE_FAILURE_MESSAGE = "The image could not be downloaded from the store."
 const VARIANTS_FAILURE_MESSAGE = "Variants could not be loaded from the store."
 const WRITE_FAILURE_MESSAGE = "The items could not be saved to the Framer collection."
 export const WRITE_PERMISSION_MESSAGE =
@@ -159,7 +158,9 @@ export function validateMapping(
 ): MappingValidationError | null {
   const usedFieldIds = new Set<string>()
   for (const row of settings.mapping) {
-    if (!row.enabled) {
+    // Unmapped rows (empty cmsFieldId, e.g. a created field that could not
+    // be resolved) are skipped exactly like disabled ones.
+    if (!row.enabled || row.cmsFieldId === "") {
       continue
     }
     const rule = FIELD_TYPE_RULES[row.platformField]
@@ -306,8 +307,8 @@ export async function runPull(
   }
   const ctx: RunContext = {
     settings,
-    rows: settings.mapping.filter(function isEnabled(row: SyncFieldMapping) {
-      return row.enabled
+    rows: settings.mapping.filter(function isRunnable(row: SyncFieldMapping) {
+      return row.enabled && row.cmsFieldId !== ""
     }),
     fieldsById,
     wooIdFieldId,
@@ -434,8 +435,14 @@ export async function runPull(
   if (report.status === "completed" && report.failed === 0) {
     try {
       await setWatermark(connection.id, startedAt)
-    } catch {
-      notes.push(WATERMARK_SAVE_NOTE)
+    } catch (error) {
+      // Surface the storage failure reason so the note is actionable
+      // instead of a mysterious full-catalog re-sync next run.
+      notes.push(
+        error instanceof Error && error.message !== ""
+          ? `${WATERMARK_SAVE_NOTE} (${error.message})`
+          : WATERMARK_SAVE_NOTE
+      )
     }
   }
 
@@ -734,40 +741,10 @@ async function syncProductImages(
     ctx.galleryCapNoted = true
     ctx.notes.push(GALLERY_CAP_NOTE)
   }
-  if (product.featuredImage) {
-    const assetId = await downloadAsset(product.featuredImage, ctx)
-    if (assetId === null) {
-      pushFailure(ctx.failures, displayName(product), IMAGE_FAILURE_MESSAGE)
-      return assets
-    }
-    assets.featuredAssetId = assetId
-  }
-  for (const image of product.gallery.slice(0, ctx.settings.galleryCap)) {
-    const assetId = await downloadAsset(image, ctx)
-    if (assetId === null) {
-      pushFailure(ctx.failures, displayName(product), IMAGE_FAILURE_MESSAGE)
-      return assets
-    }
-    assets.galleryAssetIds.push(assetId)
-  }
+  // Image fields are written with the store image URLs (see emitEntry), so
+  // there is no asset pipeline to run here: images render straight from the
+  // store, and nothing can fail per product.
   return assets
-}
-
-async function downloadAsset(
-  image: ProductImage,
-  ctx: RunContext
-): Promise<string | null> {
-  const addImage = sdk.addImage
-  if (typeof addImage !== "function") {
-    return null
-  }
-  try {
-    const asset = await addImage(image.url, { altText: image.alt })
-    await ctx.yieldFn()
-    return asset.id
-  } catch {
-    return null
-  }
 }
 
 // ============================================================================
@@ -776,6 +753,27 @@ async function downloadAsset(
 
 function stringEntry(value: string, fieldType: string): FieldEntry {
   return { type: fieldType, value }
+}
+
+/**
+ * Convert store HTML into plain text: strip tags, decode the common
+ * entities, and collapse whitespace. Used when a description maps onto a
+ * plain text field instead of rich text, so raw markup never lands in the
+ * CMS as visible text.
+ */
+function htmlToText(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#(\d+);/g, function decode(_, code) {
+      return String.fromCharCode(Number(code))
+    })
+    .replace(/\s+/g, " ")
+    .trim()
 }
 
 function numberEntry(value: number, fieldType: string): FieldEntry {
@@ -814,9 +812,13 @@ function emitEntry(
     case "stockStatus":
       return stringEntry(product.stockStatus, fieldType)
     case "description":
-      return stringEntry(product.description, fieldType)
+      return fieldType === "formattedText"
+        ? { type: fieldType, value: product.description }
+        : stringEntry(htmlToText(product.description), fieldType)
     case "shortDescription":
-      return stringEntry(product.shortDescription, fieldType)
+      return fieldType === "formattedText"
+        ? { type: fieldType, value: product.shortDescription }
+        : stringEntry(htmlToText(product.shortDescription), fieldType)
     case "lastModified":
       return stringEntry(product.lastModified, fieldType)
     case "price":
@@ -837,16 +839,27 @@ function emitEntry(
       return { type: fieldType, value: product.onSale }
     case "featuredImage": {
       if (fieldType === "image") {
-        return assets.featuredAssetId === null
-          ? null
-          : { type: "image", value: assets.featuredAssetId }
+        // Prefer the uploaded asset; when the asset pipeline fails (stores
+        // without CORS headers), fall back to the store URL so the image
+        // still lands: the CMS imports it from the URL directly.
+        if (assets.featuredAssetId !== null) {
+          return { type: "image", value: assets.featuredAssetId }
+        }
+        const url = product.featuredImage ? product.featuredImage.url : ""
+        return url === "" ? null : { type: "image", value: url }
       }
       const url = product.featuredImage ? product.featuredImage.url : ""
       return stringEntry(url, fieldType)
     }
     case "gallery": {
       if (fieldType === "array") {
-        return { type: "array", value: assets.galleryAssetIds }
+        const values =
+          assets.galleryAssetIds.length > 0
+            ? assets.galleryAssetIds
+            : product.gallery.map(function toUrl(image: ProductImage) {
+                return image.url
+              })
+        return { type: "array", value: values }
       }
       const urls = product.gallery.map(function toUrl(image: ProductImage) {
         return image.url

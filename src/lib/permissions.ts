@@ -38,6 +38,7 @@ const sdkUseIsAllowedTo = await loadPermissionHook()
  */
 export const CMS_EDIT_METHODS = [
   "createCollection",
+  "addImage",
   "Collection.addFields",
   "Collection.addItems",
   "Collection.removeItems",

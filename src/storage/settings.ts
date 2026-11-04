@@ -11,6 +11,8 @@ import {
   PLUGIN_KIND_SETTINGS,
   fieldValue,
   readPluginDataItems,
+  removePluginDataItems,
+  sdk,
   writePluginDataItems,
 } from "./internal"
 
@@ -32,6 +34,9 @@ export interface SyncFieldMapping {
 /** Sync configuration for one connection. */
 export interface SyncSettings {
   targetCollectionId: string
+  /** Display name of the target collection, saved so pages can show where
+   *  products sync into without resolving the CMS collection. */
+  targetCollectionName?: string
   mapping: SyncFieldMapping[]
   defaultItemStatus: "draft" | "publish"
   statusesFilter: string[]
@@ -122,6 +127,10 @@ function hydrateSettings(raw: unknown): SyncSettings | null {
       : defaults.statusesFilter
   return {
     targetCollectionId: raw.targetCollectionId,
+    targetCollectionName:
+      typeof raw.targetCollectionName === "string" && raw.targetCollectionName !== ""
+        ? raw.targetCollectionName
+        : undefined,
     mapping,
     defaultItemStatus: raw.defaultItemStatus === "publish" ? "publish" : "draft",
     statusesFilter,
@@ -157,6 +166,34 @@ export async function getSyncSettings(
   } catch {
     return null
   }
+}
+
+/**
+ * Whether the saved target collection still exists in the project. A
+ * collection deleted in Framer leaves the saved settings stale; callers use
+ * this to reopen the wizard instead of failing every sync.
+ */
+export async function targetCollectionExists(
+  collectionId: string
+): Promise<boolean> {
+  const collections = await sdk.getCollections()
+  if (!Array.isArray(collections)) {
+    // Standalone preview stub: assume the collection is fine.
+    return true
+  }
+  return collections.some(function matches(collection) {
+    return collection?.id === collectionId
+  })
+}
+
+/** Clear the saved settings of one connection (stale collection recovery). */
+export async function deleteSyncSettings(connectionId: string): Promise<void> {
+  const items = await readPluginDataItems(PLUGIN_KIND_SETTINGS, connectionId)
+  await removePluginDataItems(
+    items.map(function toId(item) {
+      return item.id
+    })
+  )
 }
 
 /** Save the settings of one connection, updating the existing item in place. */

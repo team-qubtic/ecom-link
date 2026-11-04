@@ -90,12 +90,24 @@ function toNormalizedImage(raw: unknown): ProductImage | null {
   if (!isRecord(raw)) {
     return null
   }
+  const alt = toStringOrEmpty(raw.alt)
+  const name = toStringOrEmpty(raw.name)
   return {
     id: String(raw.id ?? ""),
     url: toStringOrEmpty(raw.src),
-    alt: toStringOrEmpty(raw.alt),
+    // Real store payloads often leave alt empty; the file name reads better
+    // than nothing for accessibility.
+    alt: alt !== "" ? alt : nameToAlt(name),
     position: toNumberOrZero(raw.position),
   }
+}
+
+/** "hoodie-with-zipper-2.jpg" becomes "hoodie with zipper 2". */
+function nameToAlt(name: string): string {
+  return name
+    .replace(/\.[a-z0-9]+$/i, "")
+    .replace(/[-_]+/g, " ")
+    .trim()
 }
 
 /** Type guard so the gallery narrows to images only, never null holes. */
@@ -224,19 +236,25 @@ export function mapWooProduct(raw: unknown): NormalizedProduct {
   const regularPrice = toNumberOrZero(raw.regular_price)
   const salePrice = toMoneyOrNull(raw.sale_price)
   const price = toMoneyOrNull(raw.price) ?? regularPrice
-  const images = Array.isArray(raw.images) ? raw.images : []
+  const rawImages = Array.isArray(raw.images) ? raw.images : []
+  const images = rawImages.map(toNormalizedImage).filter(isPresentImage)
 
-  const featuredImage = toNormalizedImage(
-    images.find(function isFeatured(candidate) {
-      return isRecord(candidate) && candidate.position === 0
-    })
-  )
-  const gallery = images
-    .filter(function isNotFeatured(candidate) {
-      return isRecord(candidate) && candidate.position !== 0
-    })
-    .map(toNormalizedImage)
-    .filter(isPresentImage)
+  // WooCommerce orders images with the featured product image first, and
+  // the REST payload carries no explicit position field. When any image
+  // declares position 0 it wins; otherwise the first image is featured and
+  // the rest become the gallery.
+  const hasExplicitPositions = rawImages.some(function declaresPosition(candidate) {
+    return isRecord(candidate) && typeof candidate.position === "number"
+  })
+  const featuredImage = hasExplicitPositions
+    ? (images.find(function isFeatured(image) {
+        return image.position === 0
+      }) ?? null)
+    : (images[0] ?? null)
+  const featuredId = featuredImage?.id ?? null
+  const gallery = images.filter(function isNotFeatured(image) {
+    return featuredId === null || image.id !== featuredId
+  })
 
   const rawStatus = toStringOrEmpty(raw.status)
   const status = isProductStatus(rawStatus) ? rawStatus : "draft"

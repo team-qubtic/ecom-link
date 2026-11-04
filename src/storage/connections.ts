@@ -367,7 +367,14 @@ export async function listConnections(): Promise<ConnectionRecord[]> {
     return []
   }
   const items = await fetchItems(collection)
-  return items.map(toConnectionRecord)
+  // The internal collection also holds other plugin data (sync settings,
+  // watermark, run history, snapshots). Those items carry a kind field;
+  // genuine connections never do, so any item with a kind is skipped.
+  return items
+    .filter(function isConnectionItem(item: ConnectionItem) {
+      return fieldValue(item, "kind") === ""
+    })
+    .map(toConnectionRecord)
 }
 
 /** Get the one active connection, or null when there is none. */

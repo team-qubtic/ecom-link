@@ -403,7 +403,7 @@ export function ConnectionPage({
       </form>
 
       {/* Sticky action bar: always reachable while the form scrolls. */}
-      <footer className={connectionPageStyles.formActions}>
+      <footer className={pageStyles.formActions}>
         <button
           type='button'
           className='btn btn-secondary'

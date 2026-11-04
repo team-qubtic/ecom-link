@@ -489,8 +489,8 @@ describe("runPull", () => {
     })
   })
 
-  describe("image failures (AC6)", () => {
-    it("still syncs the item, leaves the image field empty, and records one failure", async () => {
+  describe("image fields (AC6)", () => {
+    it("syncs the item with the store image URL in the image field", async () => {
       const connection = await seedConnection()
       const collection = await setupTargetCollection([
         { name: "Name", type: "string" },
@@ -502,7 +502,6 @@ describe("runPull", () => {
           featuredImage: { id: "501", url: imageUrl, alt: "Front", position: 0 },
         }),
       ]
-      failImageAt(imageUrl)
       const settings = buildSettings(collection.id, [
         row("name", await fieldId(collection, "Name")),
         row("featuredImage", await fieldId(collection, "Photo")),
@@ -512,12 +511,15 @@ describe("runPull", () => {
 
       expect(report.status).toBe("completed")
       expect(report.created).toBe(1)
-      expect(report.failures).toEqual([
-        { itemName: "Product 1", message: IMAGE_FAILURE_MESSAGE },
-      ])
+      // Image fields take the store URL: images render straight from the
+      // store, with no asset pipeline and no download failures.
+      expect(report.failures).toHaveLength(0)
       const items = await collection.getItems()
       const photoFieldId = await fieldId(collection, "Photo")
-      expect(items[0].fieldData[photoFieldId]).toBeUndefined()
+      expect(items[0].fieldData[photoFieldId]).toEqual({
+        type: "image",
+        value: imageUrl,
+      })
       expect(await getWatermark(connection.id)).toBe(FIXED_NOW)
     })
   })

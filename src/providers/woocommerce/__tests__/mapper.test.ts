@@ -237,3 +237,47 @@ describe("mapWooVariation", () => {
     expect(variation.stockStatus).toBe("outofstock")
   })
 })
+
+
+describe("real store payloads", () => {
+  it("uses the first image as featured when the payload has no position field", () => {
+    // Real WooCommerce REST payloads carry no position field at all: the
+    // featured image is simply the first entry of the images array.
+    const raw = {
+      id: 37,
+      name: "WordPress Pennant",
+      slug: "wordpress-pennant",
+      status: "publish",
+      price: "11.05",
+      regular_price: "11.05",
+      sale_price: "",
+      stock_status: "instock",
+      description: "<p>Pellentesque habitant morbi.</p>",
+      images: [
+        {
+          id: 60,
+          src: "https://store.example/wp-content/uploads/pennant-1.jpg",
+          name: "pennant-1.jpg",
+          alt: "",
+        },
+        {
+          id: 61,
+          src: "https://store.example/wp-content/uploads/pennant-2.jpg",
+          name: "pennant-2.jpg",
+          alt: "",
+        },
+      ],
+    }
+
+    const product = mapWooProduct(raw)
+
+    expect(product.featuredImage?.url).toBe(
+      "https://store.example/wp-content/uploads/pennant-1.jpg"
+    )
+    expect(product.gallery.map((image) => image.url)).toEqual([
+      "https://store.example/wp-content/uploads/pennant-2.jpg",
+    ])
+    // Empty alt falls back to the cleaned-up file name.
+    expect(product.featuredImage?.alt).toBe("pennant 1")
+  })
+})
