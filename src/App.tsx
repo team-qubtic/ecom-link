@@ -142,7 +142,6 @@ export function App() {
       let timer: number | undefined
 
       async function runTick() {
-        document.documentElement.dataset.autosyncTick = new Date().toISOString();
         if (cancelled || autoSyncBusyRef.current) return
         autoSyncBusyRef.current = true
         setAutoSyncStatus("syncing")
@@ -175,7 +174,6 @@ export function App() {
       }
 
       function scheduleNext() {
-        document.documentElement.dataset.autosyncSchedule = new Date().toISOString();
         if (cancelled) return
         timer = window.setTimeout(function fire() {
           void runTick().finally(scheduleNext)
