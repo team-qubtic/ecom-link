@@ -30,6 +30,11 @@ import { listRunHistory } from "../storage/history"
 import type { SyncRunRecord } from "../storage/history"
 
 interface CatalogueViewProps {
+  /**
+   * Bumped by the app-level auto-sync loop after every run so a finished
+   * run refreshes this page immediately instead of waiting for the poll.
+   */
+  dataVersion?: number
   onConnect: () => void
   /** Opens the Connections page (sync runs from there). */
   onViewConnections: () => void
@@ -171,6 +176,7 @@ async function loadCatalogueAnalytics(): Promise<{
 
 /** Render the catalogue analytics page. */
 export function CatalogueView({
+  dataVersion = 0,
   onConnect,
   onViewConnections,
   onOpenMenu,
@@ -210,11 +216,18 @@ export function CatalogueView({
         }
       }
       void load()
+      // Auto sync keeps recording runs while this page stays open, and the
+      // "time ago" labels only get older. Poll so the cards and the
+      // activity feed keep up instead of freezing at mount-time values.
+      const poll = window.setInterval(function refresh() {
+        void load()
+      }, 30_000)
       return function cleanup() {
         cancelled = true
+        window.clearInterval(poll)
       }
     },
-    []
+    [dataVersion]
   )
 
   return (

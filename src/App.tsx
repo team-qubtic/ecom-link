@@ -99,6 +99,8 @@ export function App() {
     "idle"
   )
   const autoSyncBusyRef = useRef(false)
+  /** Bumped after every auto-sync tick so pages showing sync analytics reload. */
+  const [syncDataVersion, setSyncDataVersion] = useState(0)
 
   useEffect(
     function loadAppSettings() {
@@ -166,9 +168,17 @@ export function App() {
           // Run failures are recorded in history and shown on the
           // Connections page; the next tick retries.
         } finally {
+          // Clear the busy flag or every future tick early-returns on the
+          // guard above and auto-sync silently stops after the first run.
+          autoSyncBusyRef.current = false
           setAutoSyncStatus("idle")
           setAppSettings(function stamp(current) {
             return { ...current, lastAutoSyncAt: new Date().toISOString() }
+          })
+          // Pages showing sync analytics (Catalogue) read history once;
+          // this bump makes them reload right after each run.
+          setSyncDataVersion(function bump(version) {
+            return version + 1
           })
         }
       }
@@ -322,6 +332,7 @@ export function App() {
   } else if (page.view === "catalogue") {
     content = (
       <CatalogueView
+        dataVersion={syncDataVersion}
         onConnect={handleOpenAdd}
         onViewConnections={function openConnections() {
           setPage({ view: "connections" })
