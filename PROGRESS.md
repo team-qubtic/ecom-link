@@ -63,7 +63,7 @@ Layered design: views → sync engine → providers → storage → Framer Plugi
 |---|---|---|
 | `F01-additional-platform-providers.md` | F1 Shopify, Wix, Webflow providers | Documented, not built |
 | `F02-managed-proxy-and-background-syncs.md` | F2 Backend proxy, OAuth, background syncs | Documented, not built |
-| `F03-storefront-component-library.md` | F3 Drag-and-drop product components | Documented, not built |
+| `F03-storefront-component-library.md` | F3 Drag-and-drop product components | First pass built: 5 of 6 insert as canvas layouts (`src/storefront/`, `src/lib/canvas.ts`); variant selector deferred (needs interactivity) |
 | `F04-full-variant-sync.md` | F4 Per-variant items, variation write-back | Documented, not built |
 | `F05-cart-and-checkout-in-framer.md` | F5 Native cart and checkout | Documented, not built |
 | `F06-ai-expansions.md` | F6 Bulk AI, tone presets, translation | Documented, not built |

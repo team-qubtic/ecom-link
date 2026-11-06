@@ -759,9 +759,10 @@ function stringEntry(value: string, fieldType: string): FieldEntry {
  * Convert store HTML into plain text: strip tags, decode the common
  * entities, and collapse whitespace. Used when a description maps onto a
  * plain text field instead of rich text, so raw markup never lands in the
- * CMS as visible text.
+ * CMS as visible text. Exported for the storefront builders, which render
+ * descriptions as canvas text layers.
  */
-function htmlToText(html: string): string {
+export function htmlToText(html: string): string {
   return html
     .replace(/<[^>]*>/g, " ")
     .replace(/&nbsp;/gi, " ")

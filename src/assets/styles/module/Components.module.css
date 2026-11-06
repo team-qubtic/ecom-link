@@ -42,3 +42,16 @@
 .componentCard .badge {
   align-self: flex-start;
 }
+
+/* Insert action row: pinned to the card end so short and tall cards keep
+   their buttons aligned on the same baseline. */
+.componentActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: auto;
+}
+
+.componentCard .btn {
+  align-self: flex-start;
+}
