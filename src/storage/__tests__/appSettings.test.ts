@@ -71,6 +71,7 @@ describe("app settings round trip", () => {
     // The upsert keeps exactly one app settings item in the internal
     // collection (fieldData is keyed by field id, hence the kind lookup).
     const internal = await getInternalCollection()
+    expect(internal).not.toBeNull()
     expect(
       internal.items.filter(function isAppSettings(item) {
         return Object.values(item.fieldData).some(function isKind(entry) {

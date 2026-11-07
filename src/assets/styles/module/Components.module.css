@@ -2,56 +2,79 @@
    component cards reuse the platform tile rhythm from the dashboard. */
 
 .componentGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-sm);
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: var(--space-sm);
 }
 
 /* Card: icon tile, name and description, then the Soon badge pinned to the
    content start so short cards stay aligned. */
 .componentCard {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-  padding: var(--space-md);
-  background: transparent;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  transition:
-    background 150ms cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-md);
+	padding: var(--space-md);
+	background: transparent;
+	border: 1px solid var(--border-subtle);
+	border-radius: var(--radius-md);
+	transition:
+		background 150ms cubic-bezier(0.16, 1, 0.3, 1),
+		border-color 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .componentCard:hover {
-  background: var(--bg-inset);
-  border-color: var(--border-default);
+	background: var(--bg-inset);
+	border-color: var(--border-default);
 }
 
 .componentIcon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  flex: none;
-  border-radius: var(--radius-sm);
-  color: var(--tint);
-  background: var(--tint-dimmed);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	flex: none;
+	border-radius: var(--radius-sm);
+	color: var(--tint);
+	background: var(--tint-dimmed);
 }
 
 .componentCard .badge {
-  align-self: flex-start;
+	align-self: flex-start;
 }
 
 /* Insert action row: pinned to the card end so short and tall cards keep
    their buttons aligned on the same baseline. */
 .componentActions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-top: auto;
+	display: flex;
+	align-items: center;
+	gap: var(--space-sm);
+	margin-top: auto;
 }
 
 .componentCard .btn {
-  align-self: flex-start;
+	align-self: flex-start;
+}
+
+.collectionPicker {
+	width: 100%;
+	min-width: 0;
+	padding: var(--space-sm);
+	margin-bottom: var(--space-md);
+	border: 1px solid var(--border-default);
+	border-radius: var(--radius-sm);
+	font-size: var(--text-base);
+	overflow-wrap: anywhere;
+}
+
+.collectionPicker summary {
+	cursor: pointer;
+}
+.collectionPicker button {
+	display: block;
+	width: 100%;
+	padding: var(--space-sm);
+	margin-top: var(--space-xs);
+	text-align: left;
+	white-space: normal;
 }
